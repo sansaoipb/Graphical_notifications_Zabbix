@@ -580,8 +580,8 @@ def send_whatsapp(Ldestiny, itemType, get_graph, key):
         saudacao = ""
 
     msg0 = body.replace("\r", "").split('\n ')[0].replace("\n", "\\n")
-    msg = "{}\\n{}".format(sys.argv[2].replace(r"✅", r"\u2705"), msg0)
-    message = "{}{}".format(saudacao, msg)
+    msg = "{}\\n{}".format(sys.argv[2], msg0)
+    message = "{}{}".format(saudacao, msg.replace(r"✅", r"\u2705"))
 
     formatter = [("b", "*"), ("i", "_"), ("u", "")]
     for f in formatter:
