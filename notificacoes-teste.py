@@ -193,12 +193,28 @@ fileC = """{
         "line": false,
         "acess.key": false,
         "port": false
+    },
+    "proxy": {
+        "proxy.hostname": false,
+        "proxy.port": false,
+        "proxy.username": false,
+        "proxy.password": false
     }
 }"""
 
 if os.path.exists(fileX):
-    filOutX = os.popen(f"cat {fileX}").read().replace("acessKey", "acess.key")
-    write_json(fileX, json.loads(filOutX))
+    fileOutX = os.popen(f"cat {fileX}").read()
+    if "proxy" not in fileOutX:
+        dictOutX = json.loads(fileOutX)
+        dictOutX.update({
+            "proxy": {
+                "proxy.hostname": False,
+                "proxy.port": False,
+                "proxy.username": False,
+                "proxy.password": False
+            }
+        })
+        write_json(fileX, dictOutX)
 
 arqConfig = path.format('configScripts.properties')
 configDefault = """[PathSection]
