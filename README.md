@@ -34,7 +34,7 @@
 # Graphical Notifications Zabbix
 Em caso de dúvida, sugestão ou dificuldade junte-se a nós no <b>Grupo do Telegram</b> <a href="https://t.me/+bTDzmSmMPHYzOTJh" class="wikilink2" title="Ingressar no Grupo" rel="nofollow">Gráfico no Email e Telegram</a>.
 
-O "How to" foi testado no ZABBIX 2.4 ao 6.2 no Debian 8 ao 11, Ubuntu 14 ao 22 e CentOS 6.x ao 8, caso não utilize estas distros procure os pacotes descritos para sua necessidade.
+O "How to" foi testado no ZABBIX 2.4 ao 6.4 no Debian 8 ao 11, Ubuntu 14 ao 22 e CentOS 6.x ao 8, caso não utilize estas distros procure os pacotes descritos para sua necessidade.
 
 <!--
 # Acompanhe no Vídeo:
@@ -118,10 +118,10 @@ Instale os pacotes:
 </h3>
 
 <blockquote> <p> Debian/Ubuntu</p> </blockquote>
-<pre>sudo apt-get install -y wget dos2unix git sudo curl bc</pre>
+<pre>sudo apt-get install -y wget dos2unix git sudo curl bc python3-pip</pre>
 
 <blockquote> <p>CentOS 6.x, 7 e 8</p> </blockquote>
-<pre>sudo yum install -y wget dos2unix git sudo curl bc gcc libffi-devel python3-devel openssl-devel libevent-devel</pre>
+<pre>sudo yum install -y wget dos2unix git sudo curl bc python3-pip gcc libffi-devel python3-devel openssl-devel libevent-devel</pre>
 
 <blockquote> <p>Faça o download do script de instalação</p> </blockquote>
 <pre>cd /tmp ; wget https://raw.githubusercontent.com/sansaoipb/scripts/master/notificacoes.sh -O notificacoes.sh ; sudo dos2unix notificacoes.sh ; sudo bash notificacoes.sh</pre>
