@@ -769,35 +769,38 @@ def send_whatsapp(destiny, itemType, get_graph, key):
 
 
 def token():
+    credentials = {"user": zbx_user, "password": zbx_pass}
     try:
-        login_api = requests.post(f'{zbx_server}/api_jsonrpc.php', headers={'Content-type': 'application/json'},
-                                  verify=False, data=json.dumps(
-                {
-                    "jsonrpc": "2.0",
-                    "method": "user.login",
-                    "params": {
-                        "user": zbx_user,
-                        "password": zbx_pass
-                    },
-                    "id": 1
-                }
+        while True:
+            login_api = requests.post(f'{zbx_server}/api_jsonrpc.php', headers={'Content-type': 'application/json'},
+                                      verify=False, data=json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "method": "user.login",
+                        "params": credentials,
+                        "id": 1
+                    }
+                )
             )
-                                  )
 
-        login_api = json.loads(login_api.text.encode('utf-8'))
+            login_api = json.loads(login_api.text.encode('utf-8'))
 
-        if 'result' in login_api:
-            auth = login_api["result"]
-            return auth
+            if 'result' in login_api:
+                auth = login_api["result"]
+                return auth
 
-        elif 'error' in login_api:
-            print('Zabbix: %s' % login_api["error"]["data"])
-            log.writelog('Zabbix: {0}'.format(login_api["error"]["data"]), arqLog, "ERROR")
-            exit()
-        else:
-            print(login_api)
-            log.writelog('{0}'.format(login_api), arqLog, "ERROR")
-            exit()
+            elif 'error' in login_api:
+                if 'Invalid parameter "/": unexpected parameter "user".' == login_api["error"]["data"]:
+                    credentials["username"] = credentials.pop("user")
+                    continue
+
+                print('Zabbix: %s' % login_api["error"]["data"])
+                log.writelog('Zabbix: {0}'.format(login_api["error"]["data"]), arqLog, "ERROR")
+                exit()
+            else:
+                print(login_api)
+                log.writelog('{0}'.format(login_api), arqLog, "ERROR")
+                exit()
 
     except ValueError as e:
         print(
@@ -822,7 +825,7 @@ def version_api():
                 "id": 5
             }
         )
-                              )
+    )
     resultado = json.loads(resultado.content)
     if 'result' in resultado:
         resultado = resultado["result"]
@@ -840,7 +843,7 @@ def logout_api():
                 "id": 4
             }
         )
-                  )
+    )
 
 
 def getgraph(period):
