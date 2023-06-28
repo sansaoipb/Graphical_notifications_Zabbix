@@ -38,7 +38,7 @@
 # Graphical Notifications Zabbix
 Em caso de dúvida, sugestão ou dificuldade junte-se a nós no <b>Grupo do Telegram</b> <a href="https://t.me/+bTDzmSmMPHYzOTJh" class="wikilink2" title="Ingressar no Grupo" rel="nofollow">Gráfico no Email e Telegram</a>.
 
-O "How to" foi testado no ZABBIX 2.4 ao 6.4 no Debian 8 ao 11, Ubuntu 14 ao 22 e CentOS 6.x ao 8, caso não utilize estas distros procure os pacotes descritos para sua necessidade.
+O "How to" foi testado no ZABBIX 3.0 ao 6.4 no Debian 9 ao 11, Ubuntu 20 e 22 e CentOS/Oracle Linux/Rocky Linux/Redhat 8.0+, caso não utilize estas distros procure os pacotes descritos para sua necessidade.
 
 <!--
 # Acompanhe no Vídeo:
@@ -124,8 +124,8 @@ Instale os pacotes:
 <blockquote> <p> Debian/Ubuntu</p> </blockquote>
 <pre>sudo apt-get install -y wget dos2unix git sudo curl bc python3-pip</pre>
 
-<blockquote> <p>CentOS 6.x, 7 e 8</p> </blockquote>
-<pre>sudo yum install -y wget dos2unix git sudo curl bc python3-pip gcc libffi-devel python3-devel openssl-devel libevent-devel</pre>
+<blockquote> <p>CentOS/Oracle Linux/Rocky Linux/Redhat+</p> </blockquote>
+<pre>sudo dnf install -y wget dos2unix git sudo curl bc python3-pip gcc libffi-devel python3-devel openssl-devel libevent-devel</pre>
 
 <blockquote> <p>Faça o download do script de instalação</p> </blockquote>
 <pre>cd /tmp ; wget https://raw.githubusercontent.com/sansaoipb/scripts/master/notificacoes.sh -O notificacoes.sh ; sudo dos2unix notificacoes.sh ; sudo bash notificacoes.sh</pre>
@@ -252,12 +252,12 @@ Fonte: https://www.projetoacbr.com.br/forum/topic/66440-google-vai-deixar-de-ofe
 <b>2 - </b> Caso esteja usando conta invés de bot, terá a vantagem de usar este módulo de consulta, 
 se estiver usando bot, este comando só servirá para finalizarmos a vinculação do remetente.
 
-Este comando, também trará a quantidade e as informações de todos os seus chats, como: Tipo, Nome, ID...
-Mas somente para quem estiver <b>USANDO CONTA.</b>
+Este comando, também trará a quantidade e as informações de todos os seus chats, como: Tipo, Nome, ID...<br>
+Mas somente para quem estiver <b>USANDO CONTA.</b> e não <b>BOT</b>
 <pre>sudo -u zabbix ./notificacoes-teste.py --infoAll</pre>
 
 <b>3 – </b> Ao executar o comando acima, será solicitado inserir o token do bot ou número de telefone da conta que será usada para envio, 
-se optar por <b>usar BOT</b>: cole o token, dê ENTER e
+se optar por <b>usar BOT</b>, cole o token, dê ENTER e
 <b>DESCONSIDERE OS PRÓXIMOS PASSOS, <a href="#comando-para-teste"><u>CLICANDO AQUI</u></a></b> <br>
 
 
@@ -306,13 +306,9 @@ Comando para teste
 vá até o paramemtro <code>\# Timeout=3</code> descomente e aumente para 30, ficando assim: 
 <code>Timeout=30</code><br>
 dessa forma fica garantido a entrega.<br><br>
-
 <b>3 – </b> A estrutura de teste para o WhatsApp será (prefixo para o Brasil, DDD e número): <code>5522988776655</code>;<br>
-Para Telegram será: prioritariamente por ID (podendo usar também: 'Nome Sobrenome' ou '@usuário' se não estiver usando bot);<br> 
-Para Email será: usuario@provedor.com.<br>
-E para realizar 3 envios ao mesmo tempo, basta colocar as informações separados por vígula, por Ex:
-<pre>sudo -u zabbix ./notificacoes-teste.py --send "-123456789, 5522988776655, usuario@provedor.com"</pre>
-
+Para Telegram será: prioritariamente por ID (podendo usar também: 'Nome Sobrenome' ou '@usuário' se não estiver usando bot);<br>
+Para Email será: usuario@provedor.com.<br><br>
 
 Script para realização do teste e iniciar a configuração:<br>
 <b>Script, ID, Nome ou user.</b><br>
@@ -321,7 +317,67 @@ Exs:<br>
 ou
 <pre>sudo -u zabbix ./notificacoes-teste.py --send "Nome Sobrenome"</pre>
 ou
-<pre>sudo -u zabbix ./notificacoes-teste.py --send "usuário"</pre>
+<pre>sudo -u zabbix ./notificacoes-teste.py --send "usuário"</pre><br>
+ou para realizar 3 envios ao mesmo tempo, basta colocar as informações separados por vígula, por Ex:
+<pre>sudo -u zabbix ./notificacoes-teste.py --send "-123456789, 5522988776655, usuario@provedor.com"</pre><br>
+
+<b>4 – </b> Para quem usa BOT, para pegar o ID (tanto do grupo/canal, como de tópico), basta copiar o link de alguma mensagem, como a estrutura abaixo.<br><br>
+<b>5 – </b> Caso seja Canal ou SuperGrupo, o ID precisará ser acionado "-100" a frente do ID, confome exemplo abaixo.<br><br>
+
+<table>
+    <td colspan="3"><div align="center"> Grupo/Canal <br>https://t.me/c/4100493856/789654</div>
+        <tr>
+            <td> <!-- Group/Channel -->
+                <h4>
+                    <div align="center">ID Grupo/Canal </div>
+                </h4>
+                    <div align="center">4100493856 </div>
+            </td>
+            <td> <!-- Message -->
+                <h4>
+                    <div align="center">ID Msg</div>
+                </h4>
+                    <div align="center">789654</div>
+            </td>
+        </tr>
+        <td colspan="3"><div align="center"> <u>ID para envio</u><br><b>-1004100493856</b></div>
+        </td>
+    </td>
+</table>
+<br>
+<b>Ex Grupo/Canal:</b><br>
+<pre>sudo -u zabbix ./notificacoes-teste.py --send "-1004100493856"</pre><br>
+
+
+<table>
+    <td colspan="3"><div align="center">Tópico <br>https://t.me/c/4100493856/10562/789654</div>
+        <tr>
+            <td> <!-- Group/Channel -->
+                <h4>
+                    <div align="center">ID Grupo/Canal </div>
+                </h4>
+                    <div align="center">4100493856 </div>
+            </td>
+            <td> <!-- Topic -->
+                <h4>
+                    <div align="center">Tópico</div>
+                </h4>
+                <div align="center">10562</div>
+            </td>
+            <td> <!-- Message -->
+                <h4>
+                    <div align="center">ID Msg</div>
+                </h4>
+                    <div align="center">789654</div>
+            </td>
+        </tr>
+        <td colspan="3"><div align="center"> <u>ID para envio</u><br><b>-1004100493856_10562</b></div>
+        </td>
+    </td>
+</table>
+<br>
+<b>Ex Tópico:</b><br>
+<pre>sudo -u zabbix ./notificacoes-teste.py --send "-1004100493856_10562"</pre>
 
 # Configurando envio:
 
@@ -344,6 +400,12 @@ Na versão 3.0, é obrigatório a utilização das macros <code>{ALERT.SENDTO}</
 -->
 
 <img src="https://lh3.googleusercontent.com/pw/ACtC-3fsUm053aTiLCqXzGeHD6nhvsKSdoOlYggUCYqk1UtOIiQM6G9ZQGZjt8vs0-AxDvued87CTrHusOnTBIG7oQZPeTuHYWZNN6TTM7zGMc_AZD-L9JrLVPhO11J-FZUFBStmPlPIo1jWs1zMmokXJmFnxA=w830-h346-no?authuser=0"/><br><br>
+<blockquote> Variaveis para o tipo de mídia</blockquote>
+<pre>
+{ALERT.SENDTO}
+{ALERT.SUBJECT}
+{ALERT.MESSAGE}
+</pre>
 
 <h3>
 Configuração para envio:

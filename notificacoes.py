@@ -422,7 +422,13 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
     with app:
         for dest in Ldest:
             dest = dest.lower()
-            if re.search("user#|chat#|\'|\"", dest):
+            topic = None
+            if re.match("-\d+_\d+", dest):
+                if len(dest.split("_")) == 2:
+                    dest, topic = dest.split("_")
+                    topic = int(topic)
+
+            elif re.search("user#|chat#|\'|\"", dest):
                 if "#" in dest:
                     dest = dest.split("#")[1]
 
@@ -513,7 +519,7 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
                     exit()
 
                 try:
-                    app.send_photo(Id, graph, caption=sendMsg)
+                    app.send_photo(Id, graph, caption=sendMsg, reply_to_message_id=topic)
                     log.writelog(
                         'Telegram sent photo message successfully | Telegram com gráfico enviado com sucesso ({0})'.format(
                             dest), arqLog, "INFO")
@@ -531,7 +537,7 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
 
             else:
                 try:
-                    app.send_message(Id, sendMsg)
+                    app.send_message(Id, sendMsg, reply_to_message_id=topic)
                     log.writelog('Telegram sent successfully | Telegram enviado com sucesso ({0})'.format(dest), arqLog,
                                  "INFO")
                 except Exception as e:
@@ -945,8 +951,8 @@ def main():
             emails.append(x)
 
         else:
-            telegram = x.replace("_", " ")
-            telegrams.append(telegram)
+            # telegram = x.replace("_", " ")
+            telegrams.append(x)
 
     if whatsapps:
         send_whatsapp(whatsapps, item_type, get_graph, codeKey)

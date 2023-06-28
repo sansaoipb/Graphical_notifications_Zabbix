@@ -32,9 +32,15 @@ import smtplib
 if len(sys.argv) == 1:
     sys.argv.append("-h")
 
+elif len(sys.argv) == 3:
+    if re.match("-\d+_\d+", sys.argv[2]):
+        sys.argv[2] = sys.argv[2].replace("_", " ")
+
 import urllib3
 import requests
 from pyrogram import Client
+from pyrogram.raw.functions.channels import GetForumTopics
+from pyrogram.errors.exceptions.bad_request_400 import ChannelInvalid, BadRequest
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -532,7 +538,6 @@ def send_telegram(dest, itemType, get_graph, key, triggerid, valueProxy):
 
     app = Client("SendGraph", api_id=api_id, api_hash=api_hash, proxy=valueProxy)
 
-    dest = dest.lower()
     saudacao = salutation
     if saudacao:
         # saudacao = salutation + " {0} \n\n"
@@ -540,7 +545,14 @@ def send_telegram(dest, itemType, get_graph, key, triggerid, valueProxy):
     else:
         saudacao = ""
 
-    if re.search("user#|chat#|\'|\"", dest):
+    dest = dest.lower()
+    topic = None
+    if re.match("-\d+_\d+", dest):
+        if len(dest.split("_")) == 2:
+            dest, topic = dest.split("_")
+            topic = int(topic)
+
+    elif re.search("user#|chat#|\'|\"", dest):
         if "#" in dest:
             dest = dest.split("#")[1]
 
@@ -633,7 +645,7 @@ def send_telegram(dest, itemType, get_graph, key, triggerid, valueProxy):
                 exit()
 
             try:
-                app.send_photo(Id, graph, caption=sendMsg)
+                app.send_photo(Id, graph, caption=sendMsg, reply_to_message_id=topic)
                 print(
                     'Telegram sent photo message successfully | Telegram com gráfico enviado com sucesso ({0})'.format(
                         dest))
@@ -657,7 +669,7 @@ def send_telegram(dest, itemType, get_graph, key, triggerid, valueProxy):
 
         else:
             try:
-                app.send_message(Id, sendMsg)
+                app.send_message(Id, sendMsg, reply_to_message_id=topic)
                 print('Telegram sent successfully | Telegram enviado com sucesso ({0})'.format(dest))
                 log.writelog('Telegram sent successfully | Telegram enviado com sucesso ({0})'.format(dest), arqLog,
                              "INFO")
@@ -1080,6 +1092,58 @@ def get_info(valueProxy, name=None):
         infos = ""
         try:
             dialogos = app.get_dialogs()
+            infos += ""
+            if name:
+                for dialogo in dialogos:
+                    Topics = ""
+                    tipos = {"group": "Grupo", "supergroup": "Super Grupo", "bot": "BOT", "channel": "Canal",
+                             "private": "Usuário"}
+                    tipo = f"Tipo: {tipos[dialogo.chat.type.value]}"
+                    Id = f"Id: {dialogo.chat.id}"
+                    try:
+                        getTopicsForum = GetForumTopics(channel=app.resolve_peer(dialogo.chat.id), offset_topic=0, offset_date=0, offset_id=0, limit=0)
+                        validaTopics = app.invoke(getTopicsForum)
+                        if validaTopics.chats[0].forum:
+                            Topics += "\nTópicos:"
+                            topicslist = sorted(validaTopics.topics, key=lambda Id: Id.id)
+                            for topics in topicslist:
+                                Topics += f"\n   - {topics.title} ( {dialogo.chat.id}_{topics.id} )"
+
+                    except (ChannelInvalid, BadRequest):
+                        pass
+
+                    if dialogo.chat.title or '777000' in Id:
+                        nome = "Nome: {}".format(dialogo.chat.title or dialogo.chat.first_name)
+                    else:
+                        nome = f"Nome: {dialogo.chat.first_name} "
+                        if dialogo.chat.last_name:
+                            nome += "{}".format(dialogo.chat.last_name)
+
+                        if dialogo.chat.username:
+                            nome += f"\nNome de usuário: {dialogo.chat.username}"
+
+                    if name.lower() in nome.lower() or name in Id:
+                        if not infos:
+                            infos += "\nChats encontrados (ContA):\n\n"
+
+                        infos += f"{tipo}\n{Id}\n{nome}{Topics}\n\n"
+                        ContA += 1
+
+                if not infos:
+                    infos = "Não há registros referente à \"{}\"\n".format(name)
+
+            else:
+                infos += "\nChats encontrados (ContA):\n\n"
+                for dialogo in dialogos:
+                    infos += "{}\n".format(dialogo.chat.title or dialogo.chat.first_name)
+                    ContA += 1
+
+            if ContA == 1:
+                infos = re.sub("Chats encontrados \(ContA\)", f"Único chat encontrado", infos)
+
+            infos = re.sub("ContA", f"{ContA}", infos)
+
+            return infos
         except Exception as msg:
             if "BOT_METHOD_INVALID" in msg.args[0]:
                 print("\nEsta função não está disponível para consultas com BOT\n")
@@ -1088,46 +1152,6 @@ def get_info(valueProxy, name=None):
 
             log.writelog('{0}'.format(msg.args[0]), arqLog, "ERROR")
             exit()
-
-        infos += ""
-        if name:
-            for dialogo in dialogos:
-                tipos = {"group": "Grupo", "supergroup": "Super Grupo", "bot": "BOT", "channel": "Canal",
-                         "private": "Usuário"}
-                tipo = f"Tipo: {tipos[dialogo.chat.type.value]}"
-                Id = f"Id: {dialogo.chat.id}"
-                if dialogo.chat.title or '777000' in Id:
-                    nome = "Nome: {}".format(dialogo.chat.title or dialogo.chat.first_name)
-                else:
-                    nome = f"Nome: {dialogo.chat.first_name} "
-                    if dialogo.chat.last_name:
-                        nome += "{}".format(dialogo.chat.last_name)
-
-                    if dialogo.chat.username:
-                        nome += f"\nNome de usuário: {dialogo.chat.username}"
-
-                if name.lower() in nome.lower() or name in Id:
-                    if not infos:
-                        infos += "\nChats encontrados (ContA):\n\n"
-
-                    infos += f"{tipo}\n{Id}\n{nome}\n\n"
-                    ContA += 1
-
-            if not infos:
-                infos = "Não há registros referente à \"{}\"\n".format(name)
-
-        else:
-            infos += "\nChats encontrados (ContA):\n\n"
-            for dialogo in dialogos:
-                infos += "{}\n".format(dialogo.chat.title or dialogo.chat.first_name)
-                ContA += 1
-
-        if ContA == 1:
-            infos = re.sub("Chats encontrados \(ContA\)", f"Único chat encontrado", infos)
-
-        infos = re.sub("ContA", f"{ContA}", infos)
-
-    return infos
 
 
 def create_file():
@@ -1322,8 +1346,7 @@ def main2(proxy, test=None):
                 emails.append(x)
 
             else:
-                telegram = x.replace("_", " ")
-                send_telegram(telegram, item_type, get_graph, codeKey, triggerid, proxy)
+                send_telegram(x, item_type, get_graph, codeKey, triggerid, proxy)
 
         if emails:
             send_mail(emails, item_type, get_graph, codeKey)
