@@ -923,7 +923,6 @@ def ack(dest, message):
 
 
 def main():
-    codDDI = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'cod.ddi')
     proxy = getProxy()
 
     if nograph not in argvs:
@@ -944,14 +943,13 @@ def main():
     whatsapps = []
 
     for x in destino:
-        if re.match(f"^({codDDI})?\d+(-)?\d+(@g\.us)?", x):
+        if re.match(f"^(\d+(-)?\d+(@g\.us)|\d{12,14})$", x):
             whatsapps.append(x)
 
         elif re.search("^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):
             emails.append(x)
 
         else:
-            # telegram = x.replace("_", " ")
             telegrams.append(x)
 
     if whatsapps:

@@ -252,7 +252,6 @@ api.hash = 12asdc64vfda19df165asdvf984dbf45
 [PathSectionWhatsApp]
 salutation.whatsapp = yes
 message.whatsapp = WhatsApp enviado com sucesso
-cod.ddi = 55
 line = 5511950287353
 acess.key = XGja6Sgtz0F01rbWNDTc
 port = 13008
@@ -1323,8 +1322,6 @@ def send(msg=False):
 
 def main2(proxy, test=None):
     inicio = time.time()
-    codDDI = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'cod.ddi')
-
     triggerid, item_type, period = send(test)
     try:
 
@@ -1339,7 +1336,7 @@ def main2(proxy, test=None):
 
         emails = []
         for x in destino:
-            if re.match(f"^({codDDI})?\d+(-)?\d+(@g\.us)?", x):
+            if re.match(f"^(\d+(-)?\d+(@g\.us)|\d{12,14})$", x):
                 send_whatsapp(x, item_type, get_graph, codeKey)
 
             elif re.search("^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):
