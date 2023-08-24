@@ -1336,7 +1336,7 @@ def main2(proxy, test=None):
 
         emails = []
         for x in destino:
-            if re.match(f"^(\d+(-)?\d+(@g\.us)|\d{12,14})$", x):
+            if re.match("^(\d+(-)?\d+(@g\.us)|\d{12,14})$", x):
                 send_whatsapp(x, item_type, get_graph, codeKey)
 
             elif re.search("^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):

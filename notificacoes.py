@@ -943,7 +943,7 @@ def main():
     whatsapps = []
 
     for x in destino:
-        if re.match(f"^(\d+(-)?\d+(@g\.us)|\d{12,14})$", x):
+        if re.match("^(\d+(-)?\d+(@g\.us)|\d{12,14})$", x):
             whatsapps.append(x)
 
         elif re.search("^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):
