@@ -423,9 +423,10 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
         for dest in Ldest:
             dest = dest.lower()
             topic = None
-            if re.match(r"-\d+ \d+", dest):
-                dest, topic = dest.split(" ")
-                topic = int(topic)
+            if re.match(r"-\d+_\d+", dest):
+                if len(dest.split("_")) == 2:
+                    dest, topic = dest.split("_")
+                    topic = int(topic)
 
             elif re.search("user#|chat#|\'|\"", dest):
                 if "#" in dest:
