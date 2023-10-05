@@ -75,16 +75,57 @@ class PropertiesReaderX:
 
 
 path = "{0}".format("/".join(sys.argv[0].split("/")[:-1]))
-
 if sys.platform.startswith('win32') or sys.platform.startswith('cygwin') or sys.platform.startswith(
         'darwin'):  # para debug quando estiver no WINDOWS ou no MAC
     path = path + "{0}"
-    graph_path = os.getcwd()
 
 else:
     path = path + "/{0}"
-    graph_path = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTelegram',
-                                                                                     'path.graph')  # Path where graph file will be save temporarily
+
+urlConfig = "https://raw.githubusercontent.com/sansaoipb/Graphical_notifications_Zabbix/main/configScripts.properties"
+configDefault = requests.get(urlConfig).text.replace("\r", "")
+arqConfig = path.format('configScripts.properties')
+if not os.path.exists(arqConfig):
+    contArq = configDefault
+
+else:
+    fileIn = f"{configDefault}".split("\n")
+
+    with open(arqConfig, "r") as f:
+        fileOut = f.read()
+
+    contArq = ""
+    for lineIn in fileIn:
+        linhaIn = re.search(f"(^[a-z.]+) ?= ?(.*)", lineIn)
+        if linhaIn:
+            keyIn = linhaIn.group(1).rstrip()
+            lineOut = re.search(f"\n({keyIn}) ?= ?(.*)", fileOut)
+            if lineOut:
+                keyOut = lineOut.group(1).split("=")[0].strip().rstrip()
+                if keyIn == keyOut:
+                    # lineOut = re.search(f"\n({keyIn}) ?= ?(.*)", fileOut).group().strip()
+                    lineOut = lineOut.group().strip()
+                    if " = " not in lineOut:
+                        lineOut = lineOut.replace('=', ' = ')
+                    contArq += f"{lineOut}\n"
+                else:
+                    valueIn = re.search(f"\n({keyIn}) ?= ?(.*)", fileOut).group(2).strip()
+                    lineOut = lineOut.group().replace(keyOut, keyIn).strip()
+                    if " = " not in lineOut:
+                        lineOut = lineOut.replace('=', ' = ')
+
+                    contArq += f"{lineOut}\n"
+
+            else:
+                contArq += f"{lineIn}\n"
+            continue
+
+        contArq += f"{lineIn}\n"
+
+    contArq = contArq.rstrip()
+
+with open(arqConfig, "w") as f:
+    f.writelines(contArq)
 
 # Zabbix settings | Dados do Zabbix ####################################################################################
 zbx_server = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'url')
@@ -92,10 +133,9 @@ zbx_user = PropertiesReaderX(path.format('configScripts.properties')).getValue('
 zbx_pass = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'pass')
 
 # Graph settings | Configuracao do Grafico #############################################################################
-height = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection',
-                                                                             'height')  # Graph height | Altura
-width = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection',
-                                                                            'width')  # Graph width  | Largura
+height = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'height')  # Graph height | Altura
+width = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'width')  # Graph width  | Largura
+graph_path = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTelegram', 'path.graph')  # Path where graph file will be save temporarily
 
 # Salutation | Saudação ################################################################################################
 Salutation = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'salutation')
@@ -164,7 +204,6 @@ def write_json(fileName, Json):
 
 
 # Diretórios
-
 # Log path | Diretório do log
 projeto = sys.argv[0].split("/")[-1:][0].split(".")[0]
 logName = '{0}.log'.format(projeto)
@@ -186,6 +225,10 @@ arqJson = ".env.json"
 fileX = os.path.join(pathLogs, arqJson)
 fileC = """{
     "code": false,
+    "general": {
+            "user": false,
+            "pass": false
+    },
     "email": {
             "smtp.server": false,
             "mail.user": false,
@@ -209,95 +252,32 @@ fileC = """{
 }"""
 
 if os.path.exists(fileX):
-    fileOutX = os.popen(f"cat {fileX}").read()
-    if "proxy" not in fileOutX:
-        dictOutX = json.loads(fileOutX)
-        dictOutX.update({
-            "proxy": {
-                "proxy.hostname": False,
-                "proxy.port": False,
-                "proxy.username": False,
-                "proxy.password": False
-            }
-        })
-        write_json(fileX, dictOutX)
+    with open(fileX, "r") as f:
+        fileOutX = f.read()
 
-arqConfig = path.format('configScripts.properties')
-configDefault = """[PathSection]
-url = http://127.0.0.1/zabbix
-user = Admin
-pass = zabbix
-height = 200
-width = 900
-stime = 3600
-ack = yes
-salutation = yes
-path.logs = Default
+    dictOutX = json.loads(fileOutX)
+    updated_dict = {}
+    if "general" not in fileOutX or "proxy" not in fileOutX:
+        if "general" not in fileOutX:
+            general = {"general": {"user": False,"pass": False}}
+            for k, v in dictOutX.items():
+                updated_dict[k] = v
+                if k == "code":
+                    updated_dict.update(general)
 
-[PathSectionEmail]
-salutation.email = yes
-message.email = Email enviado com sucesso
-mail.from = ZABBIX Monitoring <monitoring@zabbix.com>
-smtp.server = smtp.gmail.com:587
-mail.user = SeuEmail@gmail.com
-mail.pass = SuaSenha
+        if "proxy" not in fileOutX:
+            updated_dict.update({
+                "proxy": {
+                    "proxy.hostname": False,
+                    "proxy.port": False,
+                    "proxy.username": False,
+                    "proxy.password": False
+                }
+            })
+    else:
+        updated_dict = dictOutX
 
-[PathSectionTelegram]
-salutation.telegram = yes
-message.telegram = Telegram enviado com sucesso
-path.graph = /tmp
-api.id = 1234567
-api.hash = 12asdc64vfda19df165asdvf984dbf45
-
-[PathSectionWhatsApp]
-salutation.whatsapp = yes
-message.whatsapp = WhatsApp enviado com sucesso
-line = 5511950287353
-acess.key = XGja6Sgtz0F01rbWNDTc
-port = 13008
-
-[PathSectionProxy]
-proxy.hostname = no
-proxy.port = no
-proxy.username = no
-proxy.password = no"""
-
-if not os.path.exists(arqConfig):
-    contArq = configDefault
-    # os.popen(f"cat > {pathConfig} << EOF\n{configDefault} \nEOF")
-
-else:
-    fileIn = f"{configDefault}".split("\n")
-    fileOut = os.popen(f"cat {arqConfig}").read().replace("email_from", "mail.from").replace("email.from",
-                                                                                             "mail.from").replace(
-        "smtp_server", "smtp.server").replace("mail_", "mail.").replace("acessKey", "acess.key")
-    contArq = ""
-    for lineIn in fileIn:
-        linhaIn = re.search(f"(^[a-z.]+) ?= ?(.*)", lineIn)
-        if linhaIn:
-            keyIn = linhaIn.group(1).rstrip()
-            valueOut = re.search(f"\n({keyIn}) ?= ?(.*)", fileOut)
-            if valueOut:
-                keyOut = valueOut.group(1).split("=")[0].strip().rstrip()
-                if keyIn == keyOut:
-                    # valueOut = re.search(f"\n({keyIn}) ?= ?(.*)", fileOut).group().strip()
-                    valueOut = valueOut.group().strip()
-                    if " = " not in valueOut:
-                        valueOut = valueOut.replace('=', ' = ')
-                    contArq += f"{valueOut}\n"
-
-            else:
-                contArq += f"{lineIn}\n"
-            continue
-
-        contArq += f"{lineIn}\n"
-        continue
-
-    contArq = f"{contArq.rstrip()}\n"
-
-arquivo = open(f"{arqConfig}", "w")
-arquivo.writelines(contArq)
-arquivo.close()
+    write_json(fileX, updated_dict)
 
 import logging.config
 
@@ -342,17 +322,14 @@ class Log:
             Log.log(entry, pathfile, log_level)
         except Exception:
             try:
-                # if "\\" in traceback.format_exc():
-                #     linha = re.search("(File)[A-Za-z0-9_\"\\\\\s:.]+", traceback.format_exc()).group()[5:].replace("\"", "")
-                #     pathDefault = "{0}\\log\\".format("\\".join(linha.split("\\")[:-1]))
-                # else:
-                #     linha = re.search("(File)[A-Za-z0-9_\"/\s:.]+", traceback.format_exc()).group()[5:].replace("\"", "")
-                #     pathDefault = "{0}/log/".format("/".join(linha.split("/")[:-1]))
-
                 pathDefault = f"{pathLogs}/"
-                arquivo = open("{0}{1}".format(pathDefault, arqConfig), "w")
-                arquivo.writelines(file)
-                arquivo.close()
+                # arquivo = open("{0}{1}".format(pathDefault, arqConfig), "w")
+                # arquivo.writelines(file)
+                # arquivo.close()
+
+                with open(f"{pathDefault}{arqConfig}", "w") as f:
+                    f.write(file.rstrip())
+
                 Log.log(entry, pathfile, log_level)
             except Exception:
                 pass
@@ -392,10 +369,13 @@ def getProxy():
     Proxy = {}
     validaProxy = {0: 'hostname', 1: 'port', 2: 'username', 3: 'password'}
 
-    proxyHostname = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy', 'proxy.hostname')
+    proxyHostname = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy',
+                                                                                        'proxy.hostname')
     proxyPort = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy', 'proxy.port')
-    proxyUsername = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy', 'proxy.username')
-    proxyPassword = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy', 'proxy.password')
+    proxyUsername = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy',
+                                                                                        'proxy.username')
+    proxyPassword = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy',
+                                                                                        'proxy.password')
 
     validaVars = [proxyHostname, proxyPort, proxyUsername, proxyPassword]
     for y in range(len(validaVars)):
@@ -412,7 +392,7 @@ def getProxy():
     return Proxy
 
 
-def send_mail(dest, itemType, get_graph, key):
+def send_mail(dest, itemType, get_graph):
     # Mail settings | Configrações de e-mail ###########################################################################
     mail_from = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionEmail', 'mail.from')
     smtp_server0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionEmail',
@@ -422,17 +402,17 @@ def send_mail(dest, itemType, get_graph, key):
     ####################################################################################################################
 
     try:
-        smtp_server = decrypt(key, smtp_server0)
+        smtp_server = decrypt(codeKey, smtp_server0)
     except:
         smtp_server = smtp_server0
 
     try:
-        mail_user = decrypt(key, mail_user0)
+        mail_user = decrypt(codeKey, mail_user0)
     except:
         mail_user = mail_user0
 
     try:
-        mail_pass = decrypt(key, mail_pass0)
+        mail_pass = decrypt(codeKey, mail_pass0)
     except:
         mail_pass = mail_pass0
 
@@ -484,17 +464,18 @@ def send_mail(dest, itemType, get_graph, key):
         except Exception:
             pass
 
-        try:
-            smtp.login(mail_user, mail_pass)
-        except smtplib.SMTPAuthenticationError as msg:
-            print("Error: Unable to send email | Não foi possível enviar o e-mail - {0}".format(
-                msg.smtp_error.decode("utf-8").split(". ")[0]))
-            log.writelog('Error: Unable to send email | Não foi possível enviar o e-mail - {0}'.format(
-                msg.smtp_error.decode("utf-8").split(". ")[0]), arqLog, "WARNING")
-            smtp.quit()
-            exit()
-        except smtplib.SMTPException:
-            pass
+        if "SeuEmail@gmail.com" != mail_user:
+            try:
+                smtp.login(mail_user, mail_pass)
+            except smtplib.SMTPAuthenticationError as msg:
+                print("Error: Unable to send email | Não foi possível enviar o e-mail - {0}".format(
+                    msg.smtp_error.decode("utf-8").split(". ")[0]))
+                log.writelog('Error: Unable to send email | Não foi possível enviar o e-mail - {0}'.format(
+                    msg.smtp_error.decode("utf-8").split(". ")[0]), arqLog, "WARNING")
+                smtp.quit()
+                exit()
+            except smtplib.SMTPException:
+                pass
 
         try:
             smtp.sendmail(mail_from, dest, msgRoot.as_string())
@@ -503,7 +484,7 @@ def send_mail(dest, itemType, get_graph, key):
                 msg.smtp_error.decode("utf-8").split(". ")[0]))
             log.writelog('Error: Unable to send email | Não foi possível enviar o e-mail - {0}'.format(
                 msg.smtp_error.decode("utf-8").split(". ")[0]), arqLog,
-                         "WARNING")
+                "WARNING")
             smtp.quit()
             exit()
 
@@ -519,19 +500,19 @@ def send_mail(dest, itemType, get_graph, key):
         exit()
 
 
-def send_telegram(dest, itemType, get_graph, key, triggerid, valueProxy):
+def send_telegram(dest, itemType, get_graph, triggerid, valueProxy):
     # Telegram settings | Configuracao do Telegram #####################################################################
     api_id0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTelegram', 'api.id')
     api_hash0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTelegram', 'api.hash')
     ####################################################################################################################
 
     try:
-        api_id = int(decrypt(key, api_id0))
+        api_id = int(decrypt(codeKey, api_id0))
     except:
         api_id = api_id0
 
     try:
-        api_hash = str(decrypt(key, api_hash0))
+        api_hash = str(decrypt(codeKey, api_hash0))
     except:
         api_hash = api_hash0
 
@@ -681,25 +662,25 @@ def send_telegram(dest, itemType, get_graph, key, triggerid, valueProxy):
                 exit()
 
 
-def send_whatsapp(destiny, itemType, get_graph, key):
+def send_whatsapp(destiny, itemType, get_graph):
     # WhatsApp settings | Configuracao do WhatsApp #####################################################################
     line0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'line')
-    acessKey0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'acess.key')
+    acessKey0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'acess.codeKey')
     port0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'port')
     ####################################################################################################################
 
     try:
-        line = decrypt(key, line0)
+        line = decrypt(codeKey, line0)
     except:
         line = line0
 
     try:
-        acessKey = decrypt(key, acessKey0)
+        acessKey = decrypt(codeKey, acessKey0)
     except:
         acessKey = acessKey0
 
     try:
-        port = decrypt(key, port0)
+        port = decrypt(codeKey, port0)
     except:
         port = port0
 
@@ -779,38 +760,47 @@ def send_whatsapp(destiny, itemType, get_graph, key):
 
 
 def token():
-    credentials = {"user": zbx_user, "password": zbx_pass}
+    global zbx_user, zbx_pass
     try:
-        while True:
-            login_api = requests.post(f'{zbx_server}/api_jsonrpc.php', headers={'Content-type': 'application/json'},
-                                      verify=False, data=json.dumps(
-                    {
-                        "jsonrpc": "2.0",
-                        "method": "user.login",
-                        "params": credentials,
-                        "id": 1
-                    }
-                )
+        zbx_user = decrypt(codeKey, zbx_user)
+    except:
+        zbx_user = zbx_user
+
+    try:
+        zbx_pass = decrypt(codeKey, zbx_pass)
+    except:
+        zbx_pass = zbx_pass
+
+    credentials = {"user": zbx_user, "password": zbx_pass}
+    if float(version_api()[:3]) >= 6.4:
+        credentials["username"] = credentials.pop("user")
+
+    try:
+        login_api = requests.post(f'{zbx_server}/api_jsonrpc.php', headers={'Content-type': 'application/json'},
+                                  verify=False, data=json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "method": "user.login",
+                    "params": credentials,
+                    "id": 1
+                }
             )
+                                  )
 
-            login_api = json.loads(login_api.text.encode('utf-8'))
+        login_api = json.loads(login_api.text.encode('utf-8'))
 
-            if 'result' in login_api:
-                auth = login_api["result"]
-                return auth
+        if 'result' in login_api:
+            auth = login_api["result"]
+            return auth
 
-            elif 'error' in login_api:
-                if 'Invalid parameter "/": unexpected parameter "user".' == login_api["error"]["data"]:
-                    credentials["username"] = credentials.pop("user")
-                    continue
-
-                print('Zabbix: %s' % login_api["error"]["data"])
-                log.writelog('Zabbix: {0}'.format(login_api["error"]["data"]), arqLog, "ERROR")
-                exit()
-            else:
-                print(login_api)
-                log.writelog('{0}'.format(login_api), arqLog, "ERROR")
-                exit()
+        elif 'error' in login_api:
+            print('Zabbix: %s' % login_api["error"]["data"])
+            log.writelog('Zabbix: {0}'.format(login_api["error"]["data"]), arqLog, "ERROR")
+            exit()
+        else:
+            print(login_api)
+            log.writelog('{0}'.format(login_api), arqLog, "ERROR")
+            exit()
 
     except ValueError as e:
         print(
@@ -1018,12 +1008,17 @@ def getTrigger(triggerId=None):
 
         item_type = ""
         if 'result' in triggerid:
+
             resultado = triggerid["result"]
+            if not resultado:
+                print('Zabbix: Nenhuma trigger encontrada')
+                log.writelog('Zabbix: Nenhum resultado encontrado', arqLog, "ERROR")
+                exit()
 
             if triggerId:
-                hostName = triggerid["result"][0]['hosts'][0]['name']
-                triggerName = triggerid["result"][0]['description']
-                triggerID = triggerid["result"][0]['triggerid']
+                hostName = resultado[0]['hosts'][0]['name']
+                triggerName = resultado[0]['description']
+                triggerID = resultado[0]['triggerid']
 
                 for i in range(0, len(resultado)):
                     listaItemIds = []
@@ -1099,7 +1094,8 @@ def get_info(valueProxy, name=None):
                     tipo = f"Tipo: {tipos[dialogo.chat.type.value]}"
                     Id = f"Id: {dialogo.chat.id}"
                     try:
-                        getTopicsForum = GetForumTopics(channel=app.resolve_peer(dialogo.chat.id), offset_topic=0, offset_date=0, offset_id=0, limit=0)
+                        getTopicsForum = GetForumTopics(channel=app.resolve_peer(dialogo.chat.id), offset_topic=0,
+                                                        offset_date=0, offset_id=0, limit=0)
                         validaTopics = app.invoke(getTopicsForum)
                         if validaTopics.chats[0].forum:
                             Topics += "\nTópicos:"
@@ -1198,10 +1194,12 @@ def get_cripto(flag=False):
 
 def create_cripto():
     textoKey, JsonX = get_cripto()
-    key = JsonX['code']
     if textoKey:
         config = path.format('configScripts.properties')
-        contArq = os.popen("cat {}".format(config)).read()
+
+        with open(config, "r") as f:
+            contArq = f.read()
+
         textoKey = ", ".join(textoKey)
         print(f"\nOs seguintes campos podem ser criptografados:\n{textoKey}")
         criptoK = [str(objs).strip().rstrip() for objs in input("\ninforme quais deseja: ").split(",")]
@@ -1213,12 +1211,13 @@ def create_cripto():
                     for k in JsonX[js]:
                         if crip == k:
                             valueR = re.search(f"\n{crip} ?= ?(.*)\n", contArq).group(1)
-                            valueC = encrypt(key, valueR)
+                            valueC = encrypt(codeKey, valueR)
                             contArq = contArq.replace(f"{valueR}", f"{valueC}")
                             JsonX[js][k] = True
 
-        contArq = contArq.rstrip()
-        os.popen(f"cat > {config} << EOF\n{contArq} \nEOF")
+        with open(config, "w") as f:
+            f.write(contArq.rstrip())
+
         write_json(fileX, JsonX)
 
     else:
@@ -1233,11 +1232,12 @@ def update_crypto(tag):
         print(f"\nNão há campos para {pre}criptografar.\n")
         exit()
 
-    key = JsonX['code']
     config = path.format('configScripts.properties')
-    contArq = os.popen("cat {}".format(config)).read().replace("email_from", "mail.from").replace("smtp_server",
-                                                                                                  "smtp.server").replace(
-        "mail_", "mail.")
+
+    with open(config, "r") as f:
+        contArq = f.read().replace("email_from", "mail.from").replace("smtp_server",
+                                                                      "smtp.server").replace("mail_", "mail.")
+
     textoKey = ", ".join(textoKey)
     print(f"\nOs seguintes campos podem ser {pre}criptografados:\n{textoKey}")
     criptoK = [str(objs).strip().rstrip() for objs in input("\ninforme quais deseja: ").split(",")]
@@ -1251,16 +1251,17 @@ def update_crypto(tag):
                         valueR = re.search(f"\n{crip} ?= ?(.*)\n", contArq).group(1)
                         if 'de' == tag:
                             valor = valueR
-                            valueC = decrypt(key, valor)
+                            valueC = decrypt(codeKey, valor)
                             JsonX[js][k] = False
                         else:
                             valor = input(f"\nAgora informe um valor para o campo '{crip}': ")
-                            valueC = encrypt(key, valor)
+                            valueC = encrypt(codeKey, valor)
 
                         contArq = contArq.replace(f"{valueR}", f"{valueC}")
 
-    contArq = contArq.rstrip()
-    os.popen(f"cat > {config} << EOF\n{contArq} \nEOF")
+    with open(config, "w") as f:
+        f.write(contArq.rstrip())
+
     write_json(fileX, JsonX)
 
 
@@ -1311,7 +1312,6 @@ def send(msg=False):
             period = 3600
             body = '{0}'.format(triggerName)
 
-
     except Exception as msg:
         print(msg)
         log.writelog(''.format(msg), arqLog, "WARNING")
@@ -1336,16 +1336,16 @@ def main2(proxy, test=None):
         emails = []
         for x in destino:
             if re.match("^(\d+(-)?\d+(@g\.us)|\d{12,14})$", x):
-                send_whatsapp(x, item_type, get_graph, codeKey)
+                send_whatsapp(x, item_type, get_graph)
 
             elif re.search("^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):
                 emails.append(x)
 
             else:
-                send_telegram(x, item_type, get_graph, codeKey, triggerid, proxy)
+                send_telegram(x, item_type, get_graph, triggerid, proxy)
 
         if emails:
-            send_mail(emails, item_type, get_graph, codeKey)
+            send_mail(emails, item_type, get_graph)
 
         fim = time.time()
         total = fim - inicio

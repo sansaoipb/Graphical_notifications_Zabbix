@@ -81,10 +81,8 @@ zbx_user = PropertiesReaderX(path.format('configScripts.properties')).getValue('
 zbx_pass = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'pass')
 
 # Graph settings | Configuracao do Grafico #############################################################################
-height = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection',
-                                                                             'height')  # Graph height | Altura
-width = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection',
-                                                                            'width')  # Graph width  | Largura
+height = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'height')  # Graph height | Altura
+width = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'width')  # Graph width  | Largura
 
 # Ack message | Ack da Mensagem ########################################################################################
 Ack = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'ack')
@@ -186,12 +184,6 @@ class Log:
             Log.log(entry, pathfile, log_level)
         except Exception:
             try:
-                # if "\\" in traceback.format_exc():
-                #     linha = re.search("(File)[A-Za-z0-9_\"\\\\\s:.]+", traceback.format_exc()).group()[5:].replace("\"", "")
-                #     pathDefault = "{0}\\log\\".format("\\".join(linha.split("\\")[:-1]))
-                # else:
-                #     linha = re.search("(File)[A-Za-z0-9_\"/\s:.]+", traceback.format_exc()).group()[5:].replace("\"", "")
-                #     pathDefault = "{0}/log/".format("/".join(linha.split("/")[:-1]))
 
                 pathDefault = f"{pathLogs}/"
                 arquivo = open("{0}{1}".format(pathDefault, arqConfig), "w")
@@ -258,10 +250,13 @@ def getProxy():
     Proxy = {}
     validaProxy = {0: 'hostname', 1: 'port', 2: 'username', 3: 'password'}
 
-    proxyHostname = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy', 'proxy.hostname')
+    proxyHostname = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy',
+                                                                                        'proxy.hostname')
     proxyPort = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy', 'proxy.port')
-    proxyUsername = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy', 'proxy.username')
-    proxyPassword = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy', 'proxy.password')
+    proxyUsername = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy',
+                                                                                        'proxy.username')
+    proxyPassword = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionProxy',
+                                                                                        'proxy.password')
 
     validaVars = [proxyHostname, proxyPort, proxyUsername, proxyPassword]
     for y in range(len(validaVars)):
@@ -354,15 +349,16 @@ def send_mail(dest, itemType, get_graph, key):
         except Exception:
             pass
 
-        try:
-            smtp.login(mail_user, mail_pass)
-        except smtplib.SMTPAuthenticationError as msg:
-            log.writelog('Error: Unable to send email | Não foi possível enviar o e-mail - {0}'.format(
-                msg.smtp_error.decode("utf-8").split(". ")[0]), arqLog, "WARNING")
-            smtp.quit()
-            exit()
-        except smtplib.SMTPException:
-            pass
+        if "SeuEmail@gmail.com" != mail_user:
+            try:
+                smtp.login(mail_user, mail_pass)
+            except smtplib.SMTPAuthenticationError as msg:
+                log.writelog('Error: Unable to send email | Não foi possível enviar o e-mail - {0}'.format(
+                    msg.smtp_error.decode("utf-8").split(". ")[0]), arqLog, "WARNING")
+                smtp.quit()
+                exit()
+            except smtplib.SMTPException:
+                pass
 
         try:
             smtp.sendmail(mail_from, dest, msgRoot.as_string())
@@ -609,7 +605,6 @@ def send_whatsapp(Ldestiny, itemType, get_graph, key):
 
                 if result.status_code != 200:
                     error = json.loads(result.content.decode("utf-8"))['errors'][0]['message']
-                    # error = result.content.decode("utf-8")
                     log.writelog('{0}'.format(error), arqLog, "ERROR")
                 else:
                     log.writelog(
@@ -630,7 +625,6 @@ def send_whatsapp(Ldestiny, itemType, get_graph, key):
 
                 if result.status_code != 200:
                     error = json.loads(result.content.decode("utf-8"))['errors'][0]['message']
-                    # error = result.content.decode("utf-8")
                     log.writelog('{0}'.format(error), arqLog, "ERROR")
 
                 else:
@@ -647,37 +641,46 @@ def send_whatsapp(Ldestiny, itemType, get_graph, key):
                 ack(destiny, messageW)
 
 
-def token():
-    credentials = {"user": zbx_user, "password": zbx_pass}
+def token(key):
+    global zbx_user, zbx_pass
     try:
-        while True:
-            login_api = requests.post(f'{zbx_server}/api_jsonrpc.php', headers={'Content-type': 'application/json'},
-                                      verify=False, data=json.dumps(
-                    {
-                        "jsonrpc": "2.0",
-                        "method": "user.login",
-                        "params": credentials,
-                        "id": 1
-                    }
-                )
+        zbx_user = decrypt(key, zbx_user)
+    except:
+        zbx_user = zbx_user
+
+    try:
+        zbx_pass = decrypt(key, zbx_pass)
+    except:
+        zbx_pass = zbx_pass
+
+    credentials = {"user": zbx_user, "password": zbx_pass}
+    if float(version_api()[:3]) >= 6.4:
+        credentials["username"] = credentials.pop("user")
+
+    try:
+        login_api = requests.post(f'{zbx_server}/api_jsonrpc.php', headers={'Content-type': 'application/json'},
+                                  verify=False, data=json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "method": "user.login",
+                    "params": credentials,
+                    "id": 1
+                }
             )
+        )
 
-            login_api = json.loads(login_api.text.encode('utf-8'))
+        login_api = json.loads(login_api.text.encode('utf-8'))
 
-            if 'result' in login_api:
-                auth = login_api["result"]
-                return auth
+        if 'result' in login_api:
+            auth = login_api["result"]
+            return auth
 
-            elif 'error' in login_api:
-                if 'Invalid parameter "/": unexpected parameter "user".' == login_api["error"]["data"]:
-                    credentials["username"] = credentials.pop("user")
-                    continue
-
-                log.writelog('Zabbix: {0}'.format(login_api["error"]["data"]), arqLog, "ERROR")
-                exit()
-            else:
-                log.writelog('{0}'.format(login_api), arqLog, "ERROR")
-                exit()
+        elif 'error' in login_api:
+            log.writelog('Zabbix: {0}'.format(login_api["error"]["data"]), arqLog, "ERROR")
+            exit()
+        else:
+            log.writelog('{0}'.format(login_api), arqLog, "ERROR")
+            exit()
 
     except ValueError as e:
         log.writelog(
@@ -706,14 +709,14 @@ def version_api():
     return resultado
 
 
-def logout_api():
+def logout_api(auth_token):
     requests.post(f'{zbx_server}/api_jsonrpc.php', headers={'Content-type': 'application/json'},
                   verify=False, data=json.dumps(
             {
                 "jsonrpc": "2.0",
                 "method": "user.logout",
                 "params": [],
-                "auth": auth,
+                "auth": auth_token,
                 "id": 4
             }
         )
@@ -860,7 +863,7 @@ def getTrigger(triggerid):
                     "id": 2
                 }
             )
-                                  )
+        )
 
         if triggerid.status_code != 200:
             log.writelog(f'HTTPError {triggerid.status_code}: {triggerid.reason}', arqLog, "WARNING")
@@ -872,9 +875,14 @@ def getTrigger(triggerid):
         listaItemIds = []
         item_type = ""
         if 'result' in triggerid:
-            hostName = triggerid["result"][0]['hosts'][0]['name']
             resultado = triggerid["result"]
-            triggerName = triggerid["result"][0]['description']
+
+            if not resultado:
+                log.writelog('Zabbix: Nenhuma trigger encontrada', arqLog, "ERROR")
+                exit()
+
+            hostName = resultado[0]['hosts'][0]['name']
+            triggerName = resultado[0]['description']
             for i in range(0, len(resultado)):
                 for items in resultado[i]['items']:
                     if items['itemid'] not in listaItemIds:
@@ -922,7 +930,7 @@ def ack(dest, message):
                   data=json.dumps(Json))
 
 
-def main():
+def main(codeKey):
     proxy = getProxy()
 
     if nograph not in argvs:
@@ -935,8 +943,6 @@ def main():
 
     dest = sys.argv[1]
     destino = destinatarios(dest)
-
-    codeKey = JSON['code']
 
     emails = []
     telegrams = []
@@ -964,6 +970,7 @@ def main():
 
 if __name__ == '__main__':
     JSON = get_cripto()
-    auth = token()
-    main()
-    logout_api()
+    code_key = JSON['code']
+    auth = token(code_key)
+    main(code_key)
+    logout_api(auth)
