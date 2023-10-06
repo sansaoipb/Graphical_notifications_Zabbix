@@ -665,7 +665,7 @@ def send_telegram(dest, itemType, get_graph, triggerid, valueProxy):
 def send_whatsapp(destiny, itemType, get_graph):
     # WhatsApp settings | Configuracao do WhatsApp #####################################################################
     line0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'line')
-    acessKey0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'acess.codeKey')
+    acessKey0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'acess.key')
     port0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'port')
     ####################################################################################################################
 
