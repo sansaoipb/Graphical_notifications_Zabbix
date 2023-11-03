@@ -122,11 +122,14 @@ O "How to" foi testado no ZABBIX 3.0 ao 6.4 no Debian 9 ao 11, Ubuntu 20 e 22 e 
 Instale os pacotes:
 </h3>
 
+<blockquote> <p> Ajuste do pip</p> </blockquote>
+<pre>versionPython=$(/usr/bin/python3 -V 2>&1 | cut -d' ' -f2 | cut -d. -f1,2) && versionPIP=$(echo $versionPython | tr -d [:punct:])</pre>
+
 <blockquote> <p> Debian/Ubuntu</p> </blockquote>
-<pre>sudo apt-get install -y wget dos2unix git sudo curl bc python3-pip</pre>
+<pre>sudo apt-get install -y wget dos2unix git sudo curl bc python$versionPIP-pip && pathPIP=$(which pip$versionPython) && ln -sf $pathPIP /usr/bin/pip3</pre>
 
 <blockquote> <p>CentOS/Oracle Linux/Rocky Linux/Redhat+</p> </blockquote>
-<pre>sudo dnf install -y wget dos2unix git sudo curl bc python3-pip gcc libffi-devel python3-devel openssl-devel libevent-devel</pre>
+<pre>sudo dnf install -y wget dos2unix git sudo curl bc gcc libffi-devel python3-devel openssl-devel libevent-devel python$versionPIP-pip && pathPIP=$(which pip$versionPython) && ln -sf $pathPIP /usr/bin/pip3</pre>
 
 <blockquote> <p>Faça o download do script de instalação</p> </blockquote>
 <pre>cd /tmp ; wget https://raw.githubusercontent.com/sansaoipb/scripts/master/notificacoes.sh -O notificacoes.sh ; sudo dos2unix notificacoes.sh ; sudo bash notificacoes.sh</pre>
