@@ -49,7 +49,7 @@ import configparser
 
 conf = configparser
 
-import base64
+from base64 import b64encode, b64decode
 from urllib.parse import quote
 
 
@@ -109,7 +109,7 @@ def decrypt(key, source, decode=True):
     from Crypto.Cipher import AES
     from Crypto.Hash import SHA256
     if decode:
-        source = base64.b64decode(source.encode("ISO-8859-1"))
+        source = b64decode(source.encode("ISO-8859-1"))
     key = SHA256.new(key.encode("ISO-8859-1")).digest()  # use SHA-256 over our key to get a proper-sized AES key
     IV = source[:AES.block_size]  # extract the IV from the beginning
     decryptor = AES.new(key, AES.MODE_CBC, IV)
@@ -378,7 +378,7 @@ def send_mail(dest, itemType, get_graph, key):
     except smtplib.SMTPException as msg:
         log.writelog('Error: Unable to send email | Não foi possível enviar o e-mail ({0})'.format(msg), arqLog,
                      "WARNING")
-        logout_api()
+        logout_api(auth)
         smtp.quit()
         exit()
 
@@ -511,7 +511,7 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
                     log.writelog(
                         '{1} >> An error occurred at save graph file in {0} | Ocorreu um erro ao salvar o grafico no diretório {0}'.format(
                             graph_path, str(e)), arqLog, "WARNING")
-                    logout_api()
+                    logout_api(auth)
                     exit()
 
                 try:
@@ -523,7 +523,7 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
                     log.writelog(
                         '{0} >> Telegram FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo telegram ({1})'.format(
                             e, dest), arqLog, "ERROR")
-                    logout_api()
+                    logout_api(auth)
                     exit()
 
                 try:
@@ -540,12 +540,116 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
                     log.writelog(
                         '{0} >> Telegram FAIL at sending message | FALHA ao enviar a mensagem pelo telegram ({1})'.format(
                             e, dest), arqLog, "ERROR")
-                    logout_api()
+                    logout_api(auth)
                     exit()
 
             if re.search("(sim|s|yes|y)", str(Ack).lower()):
                 if nograph not in argvs:
                     ack(dest, messageT)
+
+
+def get_WhatsApp(headers, url):
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        buscas = response.json()['response']
+    except:
+        buscas = None
+
+    return buscas
+
+
+def send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destiny):
+    message = quote(b64encode(message.encode("utf-8")))
+    if re.search("(0|3)", itemType):
+        Graph = quote(graph)
+        try:
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            payload = 'app=NetiZap%20Consumers%201.0&key={key}&text={text}&type=PNG&stream={stream}&filename=grafico'.format(
+                key=acessKey, text=message, stream=Graph)
+            url = f"{url_base}/file_send?line={line}&destiny={destiny}"
+            result = requests.post(url, auth=("user", "api"), headers=headers, data=payload)
+
+            if result.status_code != 200:
+                error = json.loads(result.content.decode("utf-8"))['errors'][0]['message']
+                log.writelog('{0}'.format(error), arqLog, "ERROR")
+            else:
+                log.writelog(
+                    'WhatsApp sent photo message successfully | WhatsApp com gráfico enviado com sucesso ({0})'.format(
+                        destiny), arqLog, "INFO")
+                log.writelog('{0}'.format(json.loads(result.text)["result"]), arqLog, "INFO")
+
+        except Exception as e:
+            log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+            exit()
+    else:
+        try:
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            payload = 'App=NetiZap%20Consumers%201.0&AccessKey={}'.format(acessKey)
+            url = f"{url_base}/message_send?line={line}&destiny={destiny}&reference&text={message}"
+            result = requests.post(url, auth=("user", "api"), headers=headers, data=payload)
+
+            if result.status_code != 200:
+                error = json.loads(result.content.decode("utf-8"))['errors'][0]['message']
+                log.writelog('{0}'.format(error), arqLog, "ERROR")
+
+            else:
+                log.writelog('WhatsApp sent successfully | WhatsApp enviado com sucesso ({0})'.format(destiny),
+                             arqLog, "INFO")
+                log.writelog('{0}'.format(json.loads(result.text)["result"]), arqLog, "INFO")
+
+        except Exception as e:
+            log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+            exit()
+
+
+def send_whatsapp_free(token_wa, itemType, graph, url_base, message, destiny, saudacao):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {token_wa}"
+    }
+    Get_WA = get_WhatsApp(headers, f"{url_base}/all-groups")
+    status_Group = [group for group in Get_WA if destiny == group['id']['user']]
+
+    isGroup = True
+    if not status_Group:
+        isGroup = False
+
+    groupName = status_Group[0]['name']
+    if saudacao:
+        saudacao, _ = saudacao.split(".")
+        message = message.replace(saudacao, f"{saudacao}, {groupName}")
+
+    data = {
+        "phone": destiny,
+        "isGroup": isGroup,
+        "message": message.replace("\\n", "\n"),
+    }
+
+    if re.search("(0|3)", itemType):
+        data["caption"] = data.pop("message")
+        data["base64"] = f'data:image/png;base64,{graph.decode()}'
+        url = f'{url_base}/send-image'
+
+    else:
+        url = f'{url_base}/send-message'
+
+    try:
+        result = requests.post(url, json=data, headers=headers)
+        if result.status_code != 201:
+            texto = 'WhatsApp FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo WhatsApp\n{}'
+            error = json.loads(result.content.decode("utf-8"))['error']['name']
+            log.writelog('{0}'.format(error), arqLog, "ERROR")
+
+        else:
+            texto = f'WhatsApp sent photo message successfully | WhatsApp com gráfico enviado com sucesso ({groupName})'
+            log.writelog(texto, arqLog, "INFO")
+            r = json.loads(result.text)
+            log.writelog('{}: {}'.format(r["status"], r['response']), arqLog, "INFO")
+
+    except Exception as e:
+        log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+        exit()
 
 
 def send_whatsapp(Ldestiny, itemType, get_graph, key):
@@ -554,6 +658,11 @@ def send_whatsapp(Ldestiny, itemType, get_graph, key):
     acessKey0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'acess.key')
     port0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'port')
     messageW = f"{PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'message.whatsapp')} ({{0}})"
+
+    # WhatsApp Open source | Codigo aberto WhatsApp ####################################################################
+    wa_free = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'open.source')
+    url_base_free = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'open.source.url')
+    api_token = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'open.source.token')
     ####################################################################################################################
 
     try:
@@ -591,57 +700,95 @@ def send_whatsapp(Ldestiny, itemType, get_graph, key):
         if re.search(r"(<(/)?{}>)".format(old), message):
             message = re.sub(r"(<(/)?{}>)".format(old), r"{}".format(new), message)
 
-    message = quote(base64.b64encode(message.encode("utf-8")))
+    graph = b64encode(get_graph.content)
     for destiny in Ldestiny:
-        if re.search("(0|3)", itemType):
-            Graph = quote(base64.b64encode(get_graph.content))
-            try:
-                headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-                payload = 'app=NetiZap%20Consumers%201.0&key={key}&text={text}&type=PNG&stream={stream}&filename=grafico'.format(
-                    key=acessKey, text=message, stream=Graph)
-                url = "http://api.meuaplicativo.vip:{port}/services/file_send?line={line}&destiny={destiny}".format(
-                    port=port, line=line, destiny=destiny)
-                result = requests.post(url, auth=("user", "api"), headers=headers, data=payload)
-
-                if result.status_code != 200:
-                    error = json.loads(result.content.decode("utf-8"))['errors'][0]['message']
-                    log.writelog('{0}'.format(error), arqLog, "ERROR")
-                else:
-                    log.writelog(
-                        'WhatsApp sent photo message successfully | WhatsApp com gráfico enviado com sucesso ({0})'.format(
-                            destiny), arqLog, "INFO")
-                    log.writelog('{0}'.format(json.loads(result.text)["result"]), arqLog, "INFO")
-
-            except Exception as e:
-                log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
-                exit()
+        if re.search("(sim|s|yes|y)", str(wa_free).lower()):
+            url_base = url_base_free
+            send_whatsapp_free(api_token, itemType, graph, url_base, message, destiny, saudacao)
         else:
-            try:
-                headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-                payload = 'App=NetiZap%20Consumers%201.0&AccessKey={}'.format(acessKey)
-                url = "http://api.meuaplicativo.vip:{port}/services/message_send?line={line}&destiny={destiny}&reference&text={text}".format(
-                    port=port, line=line, destiny=destiny, text=message)
-                result = requests.post(url, auth=("user", "api"), headers=headers, data=payload)
-
-                if result.status_code != 200:
-                    error = json.loads(result.content.decode("utf-8"))['errors'][0]['message']
-                    log.writelog('{0}'.format(error), arqLog, "ERROR")
-
-                else:
-                    log.writelog('WhatsApp sent successfully | WhatsApp enviado com sucesso ({0})'.format(destiny),
-                                 arqLog, "INFO")
-                    log.writelog('{0}'.format(json.loads(result.text)["result"]), arqLog, "INFO")
-
-            except Exception as e:
-                log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
-                exit()
+            url_base = f"http://api.meuaplicativo.vip:{port}/services"
+            send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destiny)
 
         if re.search("(sim|s|yes|y)", str(Ack).lower()):
             if nograph not in argvs:
                 ack(destiny, messageW)
 
 
-def token(key):
+def send_teams(Lwebhook, itemType, get_graph):
+    saudacao = salutation
+    Saudacao = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTeams',
+                                                                                   'salutation.teams')
+    messageT = f"{PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTeams', 'message.teams')} ({{0}})"
+
+    if re.search("(sim|s|yes|y)", str(Saudacao).lower()):
+        if saudacao:
+            saudacao = salutation + ".\n\n"
+    else:
+        saudacao = ""
+
+    message = re.sub(r"(<br( ?\/)?>)", r"\n", body).replace("\n\r\n", "\n").replace("\n", "\n\n")
+    subject = "{}\n{}".format(saudacao, sys.argv[2])
+
+    formatter = [("b", "**"), ("i", "_"), ("u", "")]
+    for f in formatter:
+        old, new = f
+        if re.search(r"(<(/)?{}>)".format(old), subject):
+            subject = re.sub(fr"(<(/)?{old}>)", new, subject)
+
+    headers = {'Content-Type': 'application/json'}
+    bodyMsg = [{"type": "TextBlock", "text": subject, "weight": "bolder", "wrap": True}]
+
+    if re.search("(0|3)", itemType):
+        image = b64encode(get_graph.content).decode()
+        responseOk = 'Teams sent photo message successfully | Teams com gráfico enviado com sucesso\n{0}'
+        responsePro = 'Teams FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo Teams\n{0}'
+        bodyMsg.append({"type": "Image","url": f"data:image/png;base64,{image}","msTeams": {"allowExpand": True}})
+
+    else:
+        responseOk = 'Teams sent successfully | Teams enviado com sucesso ({0})'
+        responsePro = 'Teams FAIL at sending message | FALHA ao enviar a mensagem pelo Teams\n{0}'
+
+    bodyMsg.append({"type": "TextBlock", "text": message, "wrap": True})
+
+    payload = {
+        "type": "message",
+        'attachments': [{
+            "contentType": "application/vnd.microsoft.card.adaptive",
+            "contentUrl": None,
+            "content": {
+                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                "type": "AdaptiveCard",
+                "version": "1.0",
+                "body": bodyMsg
+                }
+        }]
+    }
+
+    for webhook in Lwebhook:
+        try:
+            response = requests.post(webhook, headers=headers, json=payload)
+            response.raise_for_status()
+
+            if response.reason == 'OK':
+                print(responseOk.format(webhook))
+                log.writelog(responseOk.format(webhook), arqLog, "INFO")
+
+            else:
+                error = response.content.decode("utf-8")
+                print(responsePro.format(error))
+                log.writelog(responsePro.format(error), arqLog, "ERROR")
+
+        except Exception as e:
+            print(e)
+            log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+            exit()
+
+        if re.search("(sim|s|yes|y)", str(Ack).lower()):
+            if nograph not in argvs:
+                ack(webhook, messageT)
+
+
+def zbx_token(key):
     global zbx_user, zbx_pass
     try:
         zbx_user = decrypt(key, zbx_user)
@@ -841,7 +988,7 @@ def getgraph(triggerName, hostName, listaItemIds, period):
         log.writelog(
             'Can\'t connect to {0}/index.php | Não foi possível conectar-se à {0}/index.php'.format(zbx_server), arqLog,
             "CRITICAL")
-        logout_api()
+        logout_api(auth)
         exit()
 
 
@@ -867,7 +1014,7 @@ def getTrigger(triggerid):
 
         if triggerid.status_code != 200:
             log.writelog(f'HTTPError {triggerid.status_code}: {triggerid.reason}', arqLog, "WARNING")
-            logout_api()
+            logout_api(auth)
             exit()
 
         triggerid = json.loads(triggerid.text.encode('utf-8'))
@@ -947,19 +1094,26 @@ def main(codeKey):
     emails = []
     telegrams = []
     whatsapps = []
+    teams = []
 
     for x in destino:
-        if re.match("^(\d+(-)?\d+(@g\.us)|\d{12,14})$", x):
+        if re.match("^(\d+(-)?\d+(@g\.us)?|\d{12,25})$", x):
             whatsapps.append(x)
 
         elif re.search("^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):
             emails.append(x)
+
+        elif re.search("webhook.office.com", x.lower()):
+            teams.append(x)
 
         else:
             telegrams.append(x)
 
     if whatsapps:
         send_whatsapp(whatsapps, item_type, get_graph, codeKey)
+
+    if teams:
+        send_teams(teams, item_type, get_graph)
 
     if telegrams:
         send_telegram(telegrams, item_type, get_graph, codeKey, proxy)
@@ -971,6 +1125,6 @@ def main(codeKey):
 if __name__ == '__main__':
     JSON = get_cripto()
     code_key = JSON['code']
-    auth = token(code_key)
+    auth = zbx_token(code_key)
     main(code_key)
     logout_api(auth)

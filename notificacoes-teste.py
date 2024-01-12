@@ -28,6 +28,7 @@ import sys
 import time
 import json
 import smtplib
+from time import sleep
 
 if len(sys.argv) == 1:
     sys.argv.append("-h")
@@ -54,7 +55,7 @@ import configparser
 
 conf = configparser
 
-import base64
+from base64 import b64encode, b64decode
 from urllib.parse import quote
 
 from Crypto.Cipher import AES
@@ -82,6 +83,7 @@ if sys.platform.startswith('win32') or sys.platform.startswith('cygwin') or sys.
 else:
     path = path + "/{0}"
 
+# '''
 urlConfig = "https://raw.githubusercontent.com/sansaoipb/Graphical_notifications_Zabbix/main/configScripts.properties"
 configDefault = requests.get(urlConfig).text.replace("\r", "")
 arqConfig = path.format('configScripts.properties')
@@ -126,6 +128,7 @@ else:
 
 with open(arqConfig, "w") as f:
     f.writelines(contArq)
+# '''
 
 # Zabbix settings | Dados do Zabbix ####################################################################################
 zbx_server = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'url')
@@ -133,9 +136,12 @@ zbx_user = PropertiesReaderX(path.format('configScripts.properties')).getValue('
 zbx_pass = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'pass')
 
 # Graph settings | Configuracao do Grafico #############################################################################
-height = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'height')  # Graph height | Altura
-width = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'width')  # Graph width  | Largura
-graph_path = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTelegram', 'path.graph')  # Path where graph file will be save temporarily
+height = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection',
+                                                                             'height')  # Graph height | Altura
+width = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection',
+                                                                            'width')  # Graph width  | Largura
+graph_path = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTelegram',
+                                                                                 'path.graph')  # Path where graph file will be save temporarily
 
 # Salutation | Saudação ################################################################################################
 Salutation = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'salutation')
@@ -177,12 +183,12 @@ def encrypt(key, source, encode=True):
     padding = AES.block_size - len(source) % AES.block_size  # calculate needed padding
     source += bytes([padding]) * padding  # Python 2.x: source += chr(padding) * padding
     data = IV + encryptor.encrypt(source)  # store the IV at the beginning and encrypt
-    return base64.b64encode(data).decode("ISO-8859-1") if encode else data
+    return b64encode(data).decode("ISO-8859-1") if encode else data
 
 
 def decrypt(key, source, decode=True):
     if decode:
-        source = base64.b64decode(source.encode("ISO-8859-1"))
+        source = b64decode(source.encode("ISO-8859-1"))
     key = SHA256.new(key.encode("ISO-8859-1")).digest()  # use SHA-256 over our key to get a proper-sized AES key
     IV = source[:AES.block_size]  # extract the IV from the beginning
     decryptor = AES.new(key, AES.MODE_CBC, IV)
@@ -241,7 +247,9 @@ fileC = """{
     "whatsapp": {
         "line": false,
         "acess.key": false,
-        "port": false
+        "port": false,
+        "open.source.url": false,
+        "open.source.token": false
     },
     "proxy": {
         "proxy.hostname": false,
@@ -259,7 +267,7 @@ if os.path.exists(fileX):
     updated_dict = {}
     if "general" not in fileOutX or "proxy" not in fileOutX:
         if "general" not in fileOutX:
-            general = {"general": {"user": False,"pass": False}}
+            general = {"general": {"user": False, "pass": False}}
             for k, v in dictOutX.items():
                 updated_dict[k] = v
                 if k == "code":
@@ -613,7 +621,8 @@ def send_telegram(dest, itemType, get_graph, triggerid, valueProxy):
         sendMsg = """{}{}\n{}""".format(saudacao.format(dest), subject, body)
         if re.search("(0|3)", itemType):
             try:
-                graph = '{0}/{1}.png'.format(graph_path, triggerid)
+                # graph = '{0}/{1}.png'.format(graph_path, triggerid)
+                graph = os.path.join(os.getcwd() if os.name == "nt" else graph_path, f'{triggerid}.png')
                 with open(graph, 'wb') as png:
                     png.write(get_graph.content)
             except BaseException as e:
@@ -662,11 +671,116 @@ def send_telegram(dest, itemType, get_graph, triggerid, valueProxy):
                 exit()
 
 
+def send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destiny):
+    message = quote(b64encode(message.encode("utf-8")))
+    if re.search("(0|3)", itemType):
+        Graph = quote(graph)
+        try:
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            payload = 'app=NetiZap%20Consumers%201.0&key={key}&text={text}&type=PNG&stream={stream}&filename=grafico'.format(
+                key=acessKey, text=message, stream=Graph)
+            url = f"{url_base}/file_send?line={line}&destiny={destiny}"
+            result = requests.post(url, auth=("user", "api"), headers=headers, data=payload)
+
+            if result.status_code != 200:
+                texto = 'WhatsApp FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo WhatsApp{}'
+                error = json.loads(result.content.decode("utf-8"))['errors'][0]['message']
+                log.writelog('{0}'.format(error), arqLog, "ERROR")
+                print(texto.format(f"\n{error}"))
+
+            else:
+                texto = f'WhatsApp sent photo message successfully | WhatsApp com gráfico enviado com sucesso ({destiny})'
+                log.writelog(texto, arqLog, "INFO")
+                log.writelog('{0}'.format(json.loads(result.text)["result"]), arqLog, "INFO")
+                print(texto)
+
+        except Exception as e:
+            log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+            exit()
+    else:
+        try:
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            payload = 'App=NetiZap%20Consumers%201.0&AccessKey={}'.format(acessKey)
+            url = f"{url_base}/message_send?line={line}&destiny={destiny}&reference&text={message}"
+            result = requests.post(url, auth=("user", "api"), headers=headers, data=payload)
+
+            if result.status_code != 200:
+                error = json.loads(result.content.decode("utf-8"))['errors'][0]['message']
+                log.writelog('{0}'.format(error), arqLog, "ERROR")
+
+            else:
+                log.writelog('WhatsApp sent successfully | WhatsApp enviado com sucesso ({0})'.format(destiny),
+                             arqLog, "INFO")
+                log.writelog('{0}'.format(json.loads(result.text)["result"]), arqLog, "INFO")
+
+        except Exception as e:
+            log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+            exit()
+
+
+def send_whatsapp_free(token_wa, itemType, graph, url_base, message, destiny, saudacao):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {token_wa}"
+    }
+    Get_WA = get_WhatsApp(headers, f'{url_base}/all-groups')
+    status_Group = [group for group in Get_WA if destiny == group['id']['user']]
+
+    isGroup = True
+    if not status_Group:
+        isGroup = False
+
+    groupName = status_Group[0]['name']
+    if saudacao:
+        saudacao, _ = saudacao.split(".")
+        message = message.replace(saudacao, f"{saudacao}, {groupName}")
+
+    data = {
+        "phone": destiny,
+        "isGroup": isGroup,
+        "message": message.replace("\\n", "\n"),
+    }
+
+    if re.search("(0|3)", itemType):
+        data["caption"] = data.pop("message")
+        data["base64"] = f'data:image/png;base64,{graph.decode()}'
+        url = f'{url_base}/send-image'
+
+    else:
+        url = f'{url_base}/send-message'
+
+    try:
+        result = requests.post(url, json=data, headers=headers)
+        if result.status_code != 201:
+            texto = 'WhatsApp FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo WhatsApp\n{}'
+            error = json.loads(result.content.decode("utf-8"))['error']['name']
+            log.writelog('{0}'.format(error), arqLog, "ERROR")
+            print(texto.format(error))
+
+        else:
+            texto = f'WhatsApp sent photo message successfully | WhatsApp com gráfico enviado com sucesso ({groupName})'
+            log.writelog(texto, arqLog, "INFO")
+            r = json.loads(result.text)
+            log.writelog('{}: {}'.format(r["status"], r['response']), arqLog, "INFO")
+            print(texto)
+
+    except Exception as e:
+        log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+        exit()
+
+
 def send_whatsapp(destiny, itemType, get_graph):
     # WhatsApp settings | Configuracao do WhatsApp #####################################################################
     line0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'line')
     acessKey0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'acess.key')
     port0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'port')
+
+    # WhatsApp Open source | Codigo aberto WhatsApp ####################################################################
+    wa_free = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'open.source')
+    url_base_free0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp',
+                                                                                         'open.source.url')
+    api_token0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp',
+                                                                                     'open.source.token')
     ####################################################################################################################
 
     try:
@@ -684,6 +798,16 @@ def send_whatsapp(destiny, itemType, get_graph):
     except:
         port = port0
 
+    try:
+        url_base_free = decrypt(codeKey, url_base_free0)
+    except:
+        url_base_free = url_base_free0
+
+    try:
+        api_token = decrypt(codeKey, api_token0)
+    except:
+        api_token = api_token0
+
     saudacao = salutation
     Saudacao = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp',
                                                                                    'salutation.whatsapp')
@@ -695,71 +819,93 @@ def send_whatsapp(destiny, itemType, get_graph):
         saudacao = ""
 
     msg0 = body.replace("\r", "").split('\n ')[0].replace("\n", "\\n")
-    msg = "{}\\n{}".format(subject.replace(r"✅", r"\u2705"), msg0)
-    message = "{}{}".format(saudacao, msg)
+    msg = "{}\\n{}".format(subject, msg0)
+    message = "{}{}".format(saudacao, msg.replace(r"✅", r"\u2705"))
 
     formatter = [("b", "*"), ("i", "_"), ("u", "")]
     for f in formatter:
         old, new = f
         if re.search(r"(<(/)?{}>)".format(old), message):
+            message = re.sub(r"(<(/)?{}>)".format(old), r"{}".format(new), message)
+
+    graph = b64encode(get_graph.content)
+    if re.search("(sim|s|yes|y)", str(wa_free).lower()):
+        url_base = url_base_free
+        send_whatsapp_free(api_token, itemType, graph, url_base, message, destiny, saudacao)
+    else:
+        url_base = f"http://api.meuaplicativo.vip:{port}/services"
+        send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destiny)
+
+
+def send_teams(webhook, itemType, get_graph):
+    saudacao = salutation
+    Saudacao = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTeams',
+                                                                                   'salutation.teams')
+
+    if re.search("(sim|s|yes|y)", str(Saudacao).lower()):
+        if saudacao:
+            saudacao = salutation + ".\n\n"
+    else:
+        saudacao = ""
+
+    msg0 = body.replace("\\n", "").replace("\n", "\n\n")
+    message = "{}\n\n{}".format(saudacao, subject, msg0)
+
+    formatter = [("b", "**"), ("i", "_"), ("u", "")]
+    for f in formatter:
+        old, new = f
+        if re.search(r"(<(/)?{}>)".format(old), message):
             message = re.sub(fr"(<(/)?{old}>)", new, message)
 
-    message = quote(base64.b64encode(message.encode("utf-8")))
+    headers = {'Content-Type': 'application/json'}
+    bodyMsg = [{"type": "TextBlock", "text": message, "weight": "bolder", "wrap": True}]
+
     if re.search("(0|3)", itemType):
-        Graph = quote(base64.b64encode(get_graph.content))  # .decode("ISO-8859-1"))
-        try:
-            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-            payload = 'app=NetiZap%20Consumers%201.0&key={key}&text={text}&type=PNG&stream={stream}&filename=grafico'.format(
-                key=acessKey, text=message, stream=Graph)
-            url = "http://api.meuaplicativo.vip:{port}/services/file_send?line={line}&destiny={destiny}".format(
-                port=port, line=line, destiny=destiny)
-            result = requests.post(url, auth=("user", "api"), headers=headers, data=payload)
+        image = b64encode(get_graph.content).decode()
+        responseOk = 'Teams sent photo message successfully | Teams com gráfico enviado com sucesso\n{0}'
+        responsePro = 'Teams FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo Teams\n{0}'
+        bodyMsg.append({"type": "Image", "url": f"data:image/png;base64,{image}", "msTeams": {"allowExpand": True}})
 
-            if result.status_code != 200:
-                error = json.loads(result.content.decode("utf-8"))['errors'][0]['message']
-                # error = result.content.decode("utf-8")
-                log.writelog('{0}'.format(error), arqLog, "ERROR")
-                print(
-                    'WhatsApp FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo WhatsApp\n%s' % error)
-
-            else:
-                print(
-                    'WhatsApp sent photo message successfully | WhatsApp com gráfico enviado com sucesso ({0})'.format(
-                        destiny))
-                log.writelog(
-                    'WhatsApp sent photo message successfully | WhatsApp com gráfico enviado com sucesso ({0})'.format(
-                        destiny), arqLog, "INFO")
-                log.writelog('{0}'.format(json.loads(result.text)["result"]), arqLog, "INFO")
-        except Exception as e:
-            print(e)
-            log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
-            exit()
     else:
-        try:
-            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-            payload = 'App=NetiZap%20Consumers%201.0&AccessKey={}'.format(acessKey)
-            url = "http://api.meuaplicativo.vip:{port}/services/message_send?line={line}&destiny={destiny}&reference&text={text}".format(
-                port=port, line=line, destiny=destiny, text=message)
-            result = requests.post(url, auth=("user", "api"), headers=headers, data=payload)
+        responseOk = 'Teams sent successfully | Teams enviado com sucesso ({0})'
+        responsePro = 'Teams FAIL at sending message | FALHA ao enviar a mensagem pelo Teams\n{0}'
 
-            if result.status_code != 200:
-                error = json.loads(result.content.decode("utf-8"))['errors'][0]['message']
-                # error = result.content.decode("utf-8")
-                log.writelog('{0}'.format(error), arqLog, "ERROR")
-                print('WhatsApp FAIL at sending message | FALHA ao enviar a mensagem pelo WhatsApp\n%s' % error)
+    bodyMsg.append({"type": "TextBlock", "text": body, "wrap": True})
 
-            else:
-                print('WhatsApp sent successfully | WhatsApp enviado com sucesso ({0})'.format(destiny))
-                log.writelog('WhatsApp sent successfully | WhatsApp enviado com sucesso ({0})'.format(destiny), arqLog,
-                             "INFO")
-                log.writelog('{0}'.format(json.loads(result.text)["result"]), arqLog, "INFO")
-        except Exception as e:
-            print(e)
-            log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
-            exit()
+    payload = {
+        "type": "message",
+        'attachments': [{
+            "contentType": "application/vnd.microsoft.card.adaptive",
+            "contentUrl": None,
+            "content": {
+                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                "type": "AdaptiveCard",
+                "version": "1.0",
+                "body": bodyMsg
+            }
+        }]
+    }
+
+    try:
+        response = requests.post(webhook, headers=headers, json=payload)
+        response.raise_for_status()
+
+        if response.reason == 'OK':
+            print(responseOk.format(webhook))
+            log.writelog(responseOk.format(webhook), arqLog, "INFO")
+
+        else:
+            error = response.content.decode("utf-8")
+            print(responsePro.format(error))
+            log.writelog(responsePro.format(error), arqLog, "ERROR")
+
+    except Exception as e:
+        print(e)
+        log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+        exit()
 
 
-def token():
+def zbx_token():
     global zbx_user, zbx_pass
     try:
         zbx_user = decrypt(codeKey, zbx_user)
@@ -772,7 +918,12 @@ def token():
         zbx_pass = zbx_pass
 
     credentials = {"user": zbx_user, "password": zbx_pass}
-    if float(version_api()[:3]) >= 6.4:
+    try:
+        versao_zabbix = float(version_api()[:3])
+    except json.decoder.JSONDecodeError:
+        print("Erro ao verificar a versão do zabbix.\ncorrija a URL no \"configScripts.properties\"")
+        exit()
+    if versao_zabbix >= 6.4:
         credentials["username"] = credentials.pop("user")
 
     try:
@@ -825,7 +976,7 @@ def version_api():
                 "id": 5
             }
         )
-    )
+                              )
     resultado = json.loads(resultado.content)
     if 'result' in resultado:
         resultado = resultado["result"]
@@ -843,7 +994,7 @@ def logout_api():
                 "id": 4
             }
         )
-    )
+                  )
 
 
 def getgraph(period):
@@ -1064,7 +1215,121 @@ def getTrigger(triggerId=None):
         exit()
 
 
-def get_info(valueProxy, name=None):
+def countdown(Time=3):
+    print()
+    message = "O processo encerrará em {:1d} {}"
+    for remaining in range(Time, 0, -1):
+        sys.stdout.write("\r")
+        sys.stdout.write(message.format(remaining, "segundos. " if remaining > 1 else "segundo. "))
+        sys.stdout.flush()
+        sleep(1)
+    sys.stdout.write(f"\rCompleto!{' ' * len(message)}\n")
+    print()
+    exit()
+
+
+def get_WhatsApp(headers, url):
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        buscas = response.json()['response']
+    except:
+        buscas = None
+
+    return buscas
+
+
+def get_info_WhatsApp(name=None):
+    url_base_free0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp',
+                                                                                         'open.source.url')
+    api_token0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp',
+                                                                                     'open.source.token')
+    ####################################################################################################################
+
+    try:
+        url_base_free = decrypt(codeKey, url_base_free0)
+    except:
+        url_base_free = url_base_free0
+
+    try:
+        api_token = decrypt(codeKey, api_token0)
+    except:
+        api_token = api_token0
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_token}"
+    }
+
+    url = f'{url_base_free}/all-contacts'
+    ContA = 0
+    infos = ""
+    try:
+        buscas = get_WhatsApp(headers, url)
+        if not buscas:
+            print("\nNão foi possivel conextar no WhatsApp, verifique as informações no \"configScripts.properties\"")
+            exit()
+
+        infos += ""
+        if name:
+            for busca in buscas:
+                Id = f"Id: {busca['id']['user']}"
+                try:
+                    nome = f"Nome: {busca['name']}"
+                except KeyError:
+                    try:
+                        nome = f"Nome: {busca['contact']['name']}"
+                    except KeyError:
+                        nome = f"Nome: {busca['formattedName']}"
+
+                tipo = "Grupo"
+                if busca['isUser']:
+                    tipo = "Usuário"
+
+                tipo = f'Tipo: {tipo}'
+                if name.lower() in nome.lower() or name in Id:
+                    if not infos:
+                        infos += "\n####### Chats encontrados (ContA) ########################################\n\n"
+
+                    infos += f"{tipo}\n{nome}\n{Id}\n\n"
+                    ContA += 1
+
+        else:
+            infos += "\n####### Chats encontrados (ContA) ########################################\n\n"
+            for busca in buscas:
+                try:
+                    name = busca['name']
+                except KeyError:
+                    try:
+                        name = busca['contact']['name']
+                    except KeyError:
+                        name = busca['formattedName']
+
+                tipo = "Grupo"
+                if busca['isUser']:
+                    tipo = "Usuário"
+
+                nome = f"Nome: {name} ( {tipo} )"
+                infos += "{}\n".format(nome)
+                ContA += 1
+
+        infos += "\n####### Chats encontrados (ContA) ########################################\n\n"
+        if ContA == 1:
+            infos = re.sub("Chats encontrados \(ContA\)", f"Único chat encontrado", infos)
+
+        infos = re.sub("ContA", f"{ContA}", infos)
+
+        if not ContA:
+            infos = "\nNão há registros referente à \"{}\"\n".format(name)
+
+        return infos
+    except requests.exceptions.RequestException as msg:
+        print("Erro na solicitação:\n", msg)
+        log.writelog('{0}'.format(msg), arqLog, "ERROR")
+        exit()
+
+
+def get_info_telegram(valueProxy, name=None):
     # Telegram settings | Configuracao do Telegram #########################################################################
     api_id0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTelegram', 'api.id')
     api_hash0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTelegram', 'api.hash')
@@ -1118,24 +1383,25 @@ def get_info(valueProxy, name=None):
 
                     if name.lower() in nome.lower() or name in Id:
                         if not infos:
-                            infos += "\nChats encontrados (ContA):\n\n"
+                            infos += "\n####### Chats encontrados (ContA) ########################################\n\n"
 
-                        infos += f"{tipo}\n{Id}\n{nome}{Topics}\n\n"
+                        infos += f"{tipo}\n{nome}\n{Id}{Topics}\n\n"
                         ContA += 1
 
-                if not infos:
-                    infos = "Não há registros referente à \"{}\"\n".format(name)
-
             else:
-                infos += "\nChats encontrados (ContA):\n\n"
+                infos += "\n####### Chats encontrados (ContA) ########################################\n\n"
                 for dialogo in dialogos:
                     infos += "{}\n".format(dialogo.chat.title or dialogo.chat.first_name)
                     ContA += 1
 
+            infos += "\n####### Chats encontrados (ContA) ########################################\n\n"
             if ContA == 1:
                 infos = re.sub("Chats encontrados \(ContA\)", f"Único chat encontrado", infos)
 
             infos = re.sub("ContA", f"{ContA}", infos)
+
+            if not ContA:
+                infos = "\nNão há registros referente à \"{}\"\n".format(name)
 
             return infos
         except Exception as msg:
@@ -1146,6 +1412,57 @@ def get_info(valueProxy, name=None):
 
             log.writelog('{0}'.format(msg.args[0]), arqLog, "ERROR")
             exit()
+
+
+def menu(listaopcoes):
+    os.system('cls' if os.name == "nt" else "clear")
+    print("--- Escolha uma opção do menu ---\n")
+    OPCOES = [f"{opcoes}\n" for opcoes in listaopcoes]
+    print("".join(OPCOES))
+    print("  0 - Sair\n")
+
+    return menu_opcao(listaopcoes)
+
+
+def menu_opcao(QtOpcs):
+    numeros = re.findall("(\d+)", ", ".join(QtOpcs))
+    opcao = input(f"Selecione uma opção [0-{len(QtOpcs)}]: ")
+    if opcao == '0':
+        countdown()
+        exit()
+
+    elif opcao not in numeros:
+        print("\nOPÇÃO INVÁLIDA, escolha uma numeração da lista")
+        sleep(3)
+        menu(QtOpcs)
+
+    print("\nOpção selecionada:\n", QtOpcs[int(opcao) - 1].split("- ")[1])
+
+    if not re.search("(s|y|sim|yes)", input("\nEstá correto (s/n)? ").lower()):
+        menu(QtOpcs)
+
+    os.system('cls' if os.name == "nt" else "clear")
+    return opcao
+
+
+def menuPrincipal():
+    listaOpcoes = [
+        "  1 - Telegram",
+        "  2 - WhatsApp",
+    ]
+
+    return menu(listaOpcoes)
+
+
+def get_info(valueProxy, name=None):
+    info_get = int(menuPrincipal())
+
+    if info_get == 1:
+        r = get_info_telegram(valueProxy, name)
+    else:
+        r = get_info_WhatsApp(name)
+
+    return r
 
 
 def create_file():
@@ -1160,7 +1477,24 @@ def create_file():
         write_json(fileX, JsonX)
 
     else:
-        JsonX = load_json(fileX)
+        # import ipdb; ipdb.set_trace()
+        JsonV = load_json(fileX)
+        JsonC = json.loads(fileC)
+        for obj_pai in JsonC:
+            if "code" != obj_pai:
+                try:
+                    JsonV[obj_pai]
+                except KeyError:
+                    JsonV[obj_pai] = JsonC[obj_pai]
+
+                for obj_filho in JsonC[obj_pai]:
+                    try:
+                        JsonV[obj_pai][obj_filho]
+                    except KeyError:
+                        JsonV[obj_pai][obj_filho] = JsonC[obj_pai][obj_filho]
+
+        write_json(fileX, JsonV)
+        JsonX = JsonV
 
     return JsonX
 
@@ -1168,7 +1502,6 @@ def create_file():
 def get_cripto(flag=False):
     JsonX = create_file()
     # import ipdb; ipdb.set_trace()
-    # text = ""
     textK0 = []
     for obj in JsonX:
         if "code" == obj:
@@ -1185,8 +1518,6 @@ def get_cripto(flag=False):
                 textK += f"{k}, "
                 textK0 += [k]
 
-        # if textK:
-        #     text += f"{textK[:-2]}\n"
     write_json(fileX, JsonX)
 
     return textK0, JsonX
@@ -1335,8 +1666,11 @@ def main2(proxy, test=None):
 
         emails = []
         for x in destino:
-            if re.match("^(\d+(-)?\d+(@g\.us)|\d{12,14})$", x):
+            if re.match("^(\d+(-)?\d+(@g\.us)?|\d{12,25})$", x):
                 send_whatsapp(x, item_type, get_graph)
+
+            elif re.search("webhook.office.com", x.lower()):
+                send_teams(x, item_type, get_graph)
 
             elif re.search("^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):
                 emails.append(x)
@@ -1372,6 +1706,7 @@ def main():
     parser.add_argument('-s', '--send', action="store", dest="destiny", help="Send test")
     parser.add_argument('-t', '--test', action="store", dest="argvs_Environment", help="Send test environment")
 
+    nome = None
     try:
         args = parser.parse_args()
     except:
@@ -1391,22 +1726,19 @@ def main():
         exit()
 
     elif args.destiny:
-        auth = token()
+        auth = zbx_token()
         main2(proxy)
         logout_api()
         exit()
 
     elif args.argvs_Environment:
-        auth = token()
+        auth = zbx_token()
         main2(proxy, True)
         logout_api()
         exit()
 
     elif args.contact:
         nome = args.contact
-
-    elif args.infoAll:
-        nome = None
 
     r = get_info(proxy, nome)
     print(r)
