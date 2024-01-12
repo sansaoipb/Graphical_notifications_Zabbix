@@ -151,7 +151,7 @@ sudo bash notificacoes.sh</code></pre>
 <pre><code>sudo dnf install -y wget dos2unix git sudo curl bc gcc libffi-devel python3-devel openssl-devel libevent-devel</code></pre>
 
 <blockquote> <p>Faça o download do script de instalação</p> </blockquote>
-<pre><code>curl -sSL https://raw.githubusercontent.com/sansaoipb/scripts/master/notificacoes-beta.sh | bash </code></pre>
+<pre><code>curl -sSL https://raw.githubusercontent.com/sansaoipb/scripts/master/notificacoes.sh | bash </code></pre>
 
 
 
