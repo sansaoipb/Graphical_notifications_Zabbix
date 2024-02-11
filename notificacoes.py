@@ -700,7 +700,10 @@ def send_whatsapp(Ldestiny, itemType, get_graph, key):
         if re.search(r"(<(/)?{}>)".format(old), message):
             message = re.sub(r"(<(/)?{}>)".format(old), r"{}".format(new), message)
 
-    graph = b64encode(get_graph.content)
+    graph = get_graph
+    if get_graph:
+        graph = b64encode(get_graph.content)
+
     for destiny in Ldestiny:
         if re.search("(sim|s|yes|y)", str(wa_free).lower()):
             url_base = url_base_free

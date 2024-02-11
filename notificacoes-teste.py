@@ -828,7 +828,10 @@ def send_whatsapp(destiny, itemType, get_graph):
         if re.search(r"(<(/)?{}>)".format(old), message):
             message = re.sub(r"(<(/)?{}>)".format(old), r"{}".format(new), message)
 
-    graph = b64encode(get_graph.content)
+    graph = get_graph
+    if get_graph:
+        graph = b64encode(get_graph.content)
+
     if re.search("(sim|s|yes|y)", str(wa_free).lower()):
         url_base = url_base_free
         send_whatsapp_free(api_token, itemType, graph, url_base, message, destiny, saudacao)
@@ -1267,7 +1270,7 @@ def get_info_WhatsApp(name=None):
     try:
         buscas = get_WhatsApp(headers, url)
         if not buscas:
-            print("\nNão foi possivel conextar no WhatsApp, verifique as informações no \"configScripts.properties\"")
+            print("\nNão foi possivel conectar no WhatsApp, verifique as informações no \"configScripts.properties\"")
             exit()
 
         infos += ""
