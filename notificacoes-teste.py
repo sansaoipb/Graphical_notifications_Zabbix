@@ -690,9 +690,15 @@ def send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destin
 
             else:
                 texto = f'WhatsApp sent photo message successfully | WhatsApp com gráfico enviado com sucesso ({destiny})'
+                try:
+                    result_str = json.loads(result.text)["result"]
+                except KeyError:
+                    texto = 'WhatsApp FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo WhatsApp{}'
+                    result_str = result.text
+
                 log.writelog(texto, arqLog, "INFO")
-                log.writelog('{0}'.format(json.loads(result.text)["result"]), arqLog, "INFO")
-                print(texto)
+                log.writelog('{0}'.format(result_str), arqLog, "INFO")
+                print(texto.format(result_str))
 
         except Exception as e:
             log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
@@ -709,9 +715,16 @@ def send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destin
                 log.writelog('{0}'.format(error), arqLog, "ERROR")
 
             else:
-                log.writelog('WhatsApp sent successfully | WhatsApp enviado com sucesso ({0})'.format(destiny),
-                             arqLog, "INFO")
-                log.writelog('{0}'.format(json.loads(result.text)["result"]), arqLog, "INFO")
+                texto = f'WhatsApp sent successfully | WhatsApp enviado com sucesso ({destiny})'
+                try:
+                    result_str = json.loads(result.text)["result"]
+                except KeyError:
+                    texto = 'WhatsApp FAIL at sending message | FALHA ao enviar mensagem pelo WhatsApp{}'
+                    result_str = result.text
+
+                log.writelog(texto, arqLog, "INFO")
+                log.writelog('{0}'.format(result_str), arqLog, "INFO")
+                print(texto.format(result_str))
 
         except Exception as e:
             log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
@@ -828,7 +841,10 @@ def send_whatsapp(destiny, itemType, get_graph):
         if re.search(r"(<(/)?{}>)".format(old), message):
             message = re.sub(r"(<(/)?{}>)".format(old), r"{}".format(new), message)
 
-    graph = b64encode(get_graph.content)
+    graph = get_graph
+    if get_graph:
+        graph = b64encode(get_graph.content)
+
     if re.search("(sim|s|yes|y)", str(wa_free).lower()):
         url_base = url_base_free
         send_whatsapp_free(api_token, itemType, graph, url_base, message, destiny, saudacao)
@@ -1267,7 +1283,7 @@ def get_info_WhatsApp(name=None):
     try:
         buscas = get_WhatsApp(headers, url)
         if not buscas:
-            print("\nNão foi possivel conextar no WhatsApp, verifique as informações no \"configScripts.properties\"")
+            print("\nNão foi possivel conectar no WhatsApp, verifique as informações no \"configScripts.properties\"")
             exit()
 
         infos += ""

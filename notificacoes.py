@@ -574,10 +574,15 @@ def send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destin
                 error = json.loads(result.content.decode("utf-8"))['errors'][0]['message']
                 log.writelog('{0}'.format(error), arqLog, "ERROR")
             else:
-                log.writelog(
-                    'WhatsApp sent photo message successfully | WhatsApp com gráfico enviado com sucesso ({0})'.format(
-                        destiny), arqLog, "INFO")
-                log.writelog('{0}'.format(json.loads(result.text)["result"]), arqLog, "INFO")
+                texto = f'WhatsApp sent photo message successfully | WhatsApp com gráfico enviado com sucesso ({destiny})'
+                try:
+                    result_str = json.loads(result.text)["result"]
+                except KeyError:
+                    texto = 'WhatsApp FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo WhatsApp{}'
+                    result_str = result.text
+
+                log.writelog(texto, arqLog, "INFO")
+                log.writelog('{0}'.format(result_str), arqLog, "INFO")
 
         except Exception as e:
             log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
@@ -594,9 +599,15 @@ def send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destin
                 log.writelog('{0}'.format(error), arqLog, "ERROR")
 
             else:
-                log.writelog('WhatsApp sent successfully | WhatsApp enviado com sucesso ({0})'.format(destiny),
-                             arqLog, "INFO")
-                log.writelog('{0}'.format(json.loads(result.text)["result"]), arqLog, "INFO")
+                texto = f'WhatsApp sent successfully | WhatsApp enviado com sucesso ({destiny})'
+                try:
+                    result_str = json.loads(result.text)["result"]
+                except KeyError:
+                    texto = 'WhatsApp FAIL at sending message | FALHA ao enviar mensagem pelo WhatsApp{}'
+                    result_str = result.text
+
+                log.writelog(texto, arqLog, "INFO")
+                log.writelog('{0}'.format(result_str), arqLog, "INFO")
 
         except Exception as e:
             log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
@@ -700,7 +711,10 @@ def send_whatsapp(Ldestiny, itemType, get_graph, key):
         if re.search(r"(<(/)?{}>)".format(old), message):
             message = re.sub(r"(<(/)?{}>)".format(old), r"{}".format(new), message)
 
-    graph = b64encode(get_graph.content)
+    graph = get_graph
+    if get_graph:
+        graph = b64encode(get_graph.content)
+
     for destiny in Ldestiny:
         if re.search("(sim|s|yes|y)", str(wa_free).lower()):
             url_base = url_base_free
