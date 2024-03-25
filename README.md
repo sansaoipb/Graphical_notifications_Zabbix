@@ -176,7 +176,7 @@ Caso o serviço não esteja OK, entre em contato no "grupo de ajuda" supracitado
 (<a href="https://t.me/MarcilioMRTelecom" class="wikilink2" title="Conversar com ele" rel="nofollow">@MarcilioMRTelecom</a></i>)
 
 <h3>
-Contração da API para WhatsApp
+Contratação da API para WhatsApp
 </h3>
 
 <p> Caso não queira ter a responsabilidade de manter a aplicação Open Source, existe esta opção e será necessário contratar o serviço, em conversa com o responsável consegui um desconto de 50%, 
