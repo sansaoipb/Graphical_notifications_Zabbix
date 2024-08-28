@@ -306,7 +306,7 @@ def send_mail(dest, itemType, get_graph, key):
     dests = ', '.join(dest)
     msg = body.replace("\\n", "").replace("\n", "<br>")
     try:
-        subject = re.sub(r"(<(\/)?[a-z]>)", "", sys.argv[2])
+        subject = re.sub(r"(<(/)?[a-z]>)", "", sys.argv[2])
     except:
         subject = sys.argv[2]
 
@@ -330,7 +330,7 @@ def send_mail(dest, itemType, get_graph, key):
 
     text = '{0}<p>{1}</p>'.format(saudacao, msg)
 
-    if re.search("(0|3)", itemType):
+    if re.search("([03])", itemType):
         URL = urlGraph.replace("width=900&height=200", "width=1400&height=300")
         text += f'<br><a href="{URL}"><img src="cid:image1"></a>'
         msgImage = MIMEImage(get_graph.content)
@@ -502,15 +502,15 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
 
             Id = int(Id)
             sendMsg = """{}{}\n{}""".format(saudacao.format(dest), sys.argv[2], msg)
-            if re.search("(0|3)", itemType):
+            if re.search("([03])", itemType):
                 try:
                     graph = '{0}/{1}.png'.format(graph_path, triggerid)
                     with open(graph, 'wb') as png:
                         png.write(get_graph.content)
-                except BaseException as e:
+                except BaseException as err:
                     log.writelog(
                         '{1} >> An error occurred at save graph file in {0} | Ocorreu um erro ao salvar o grafico no diretório {0}'.format(
-                            graph_path, str(e)), arqLog, "WARNING")
+                            graph_path, str(err)), arqLog, "WARNING")
                     logout_api(auth)
                     exit()
 
@@ -519,27 +519,27 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
                     log.writelog(
                         'Telegram sent photo message successfully | Telegram com gráfico enviado com sucesso ({0})'.format(
                             dest), arqLog, "INFO")
-                except Exception as e:
+                except Exception as err:
                     log.writelog(
                         '{0} >> Telegram FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo telegram ({1})'.format(
-                            e, dest), arqLog, "ERROR")
+                            err, dest), arqLog, "ERROR")
                     logout_api(auth)
                     exit()
 
                 try:
                     os.remove(graph)
-                except Exception as e:
-                    log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+                except Exception as err:
+                    log.writelog('{0}'.format(str(err)), arqLog, "ERROR")
 
             else:
                 try:
                     app.send_message(Id, sendMsg, reply_to_message_id=topic)
                     log.writelog('Telegram sent successfully | Telegram enviado com sucesso ({0})'.format(dest), arqLog,
                                  "INFO")
-                except Exception as e:
+                except Exception as err:
                     log.writelog(
                         '{0} >> Telegram FAIL at sending message | FALHA ao enviar a mensagem pelo telegram ({1})'.format(
-                            e, dest), arqLog, "ERROR")
+                            err, dest), arqLog, "ERROR")
                     logout_api(auth)
                     exit()
 
@@ -561,7 +561,7 @@ def get_WhatsApp(headers, url):
 
 def send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destiny):
     message = quote(b64encode(message.encode("utf-8")))
-    if re.search("(0|3)", itemType):
+    if re.search("([03])", itemType):
         Graph = quote(graph)
         try:
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -584,8 +584,8 @@ def send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destin
                 log.writelog(texto, arqLog, "INFO")
                 log.writelog('{0}'.format(result_str), arqLog, "INFO")
 
-        except Exception as e:
-            log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+        except Exception as err:
+            log.writelog('{0}'.format(str(err)), arqLog, "ERROR")
             exit()
     else:
         try:
@@ -609,8 +609,8 @@ def send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destin
                 log.writelog(texto, arqLog, "INFO")
                 log.writelog('{0}'.format(result_str), arqLog, "INFO")
 
-        except Exception as e:
-            log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+        except Exception as err:
+            log.writelog('{0}'.format(str(err)), arqLog, "ERROR")
             exit()
 
 
@@ -637,7 +637,7 @@ def send_whatsapp_free(token_wa, itemType, graph, url_base, message, destiny, sa
         "message": message.replace("\\n", "\n"),
     }
 
-    if re.search("(0|3)", itemType):
+    if re.search("([03])", itemType):
         data["caption"] = data.pop("message")
         data["base64"] = f'data:image/png;base64,{graph.decode()}'
         url = f'{url_base}/send-image'
@@ -648,7 +648,7 @@ def send_whatsapp_free(token_wa, itemType, graph, url_base, message, destiny, sa
     try:
         result = requests.post(url, json=data, headers=headers)
         if result.status_code != 201:
-            texto = 'WhatsApp FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo WhatsApp\n{}'
+            # texto = 'WhatsApp FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo WhatsApp\n{}'
             error = json.loads(result.content.decode("utf-8"))['error']['name']
             log.writelog('{0}'.format(error), arqLog, "ERROR")
 
@@ -658,8 +658,8 @@ def send_whatsapp_free(token_wa, itemType, graph, url_base, message, destiny, sa
             r = json.loads(result.text)
             log.writelog('{}: {}'.format(r["status"], r['response']), arqLog, "INFO")
 
-    except Exception as e:
-        log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+    except Exception as err:
+        log.writelog('{0}'.format(str(err)), arqLog, "ERROR")
         exit()
 
 
@@ -752,7 +752,7 @@ def send_teams(Lwebhook, itemType, get_graph):
     headers = {'Content-Type': 'application/json'}
     bodyMsg = [{"type": "TextBlock", "text": subject, "weight": "bolder", "wrap": True}]
 
-    if re.search("(0|3)", itemType):
+    if re.search("([03])", itemType):
         image = b64encode(get_graph.content).decode()
         responseOk = 'Teams sent photo message successfully | Teams com gráfico enviado com sucesso\n{0}'
         responsePro = 'Teams FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo Teams\n{0}'
@@ -792,9 +792,9 @@ def send_teams(Lwebhook, itemType, get_graph):
                 print(responsePro.format(error))
                 log.writelog(responsePro.format(error), arqLog, "ERROR")
 
-        except Exception as e:
-            print(e)
-            log.writelog('{0}'.format(str(e)), arqLog, "ERROR")
+        except Exception as err:
+            print(err)
+            log.writelog('{0}'.format(str(err)), arqLog, "ERROR")
             exit()
 
         if re.search("(sim|s|yes|y)", str(Ack).lower()):
@@ -843,13 +843,13 @@ def zbx_token(key):
             log.writelog('{0}'.format(login_api), arqLog, "ERROR")
             exit()
 
-    except ValueError as e:
+    except ValueError:
         log.writelog(
             'Check declared zabbix URL/IP and try again | Valide a URL/IP do Zabbix declarada e tente novamente. (Current: {0})'.format(
                 zbx_server), arqLog, "WARNING")
         exit()
-    except Exception as e:
-        log.writelog('{0}'.format(str(e)), arqLog, "WARNING")
+    except Exception as err:
+        log.writelog('{0}'.format(str(err)), arqLog, "WARNING")
         exit()
 
 
@@ -959,7 +959,7 @@ def getgraph(triggerName, hostName, listaItemIds, period):
             periodH = segundos_rest // 3600
             segundos_rest = segundos_rest % 3600
             periodM = segundos_rest // 60
-            periodS = segundos_rest % 60
+            # periodS = segundos_rest % 60
 
             Nome = f"{quote(triggerName)} {{}}"
             if periodD > 0:
@@ -1111,10 +1111,10 @@ def main(codeKey):
     teams = []
 
     for x in destino:
-        if re.match("^(\d+(-)?\d+(@g\.us)?|\d{12,25})$", x):
+        if re.match(r"^(\d+(-)?\d+(@g\.us)?|\d{12,25})$", x):
             whatsapps.append(x)
 
-        elif re.search("^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):
+        elif re.search(r"^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):
             emails.append(x)
 
         elif re.search("webhook.office.com", x.lower()):

@@ -34,7 +34,7 @@ if len(sys.argv) == 1:
     sys.argv.append("-h")
 
 elif len(sys.argv) == 3:
-    if re.match("-\d+_\d+", sys.argv[2]):
+    if re.match(r"-\d+_\d+", sys.argv[2]):
         sys.argv[2] = sys.argv[2].replace("_", " ")
 
 import urllib3
@@ -1331,7 +1331,7 @@ def get_info_WhatsApp(name=None):
 
         infos += "\n####### Chats encontrados (ContA) ########################################\n\n"
         if ContA == 1:
-            infos = re.sub("Chats encontrados \(ContA\)", f"Único chat encontrado", infos)
+            infos = re.sub(r"Chats encontrados \(ContA\)", f"Único chat encontrado", infos)
 
         infos = re.sub("ContA", f"{ContA}", infos)
 
@@ -1412,7 +1412,7 @@ def get_info_telegram(valueProxy, name=None):
 
             infos += "\n####### Chats encontrados (ContA) ########################################\n\n"
             if ContA == 1:
-                infos = re.sub("Chats encontrados \(ContA\)", f"Único chat encontrado", infos)
+                infos = re.sub(r"Chats encontrados \(ContA\)", f"Único chat encontrado", infos)
 
             infos = re.sub("ContA", f"{ContA}", infos)
 
@@ -1441,7 +1441,7 @@ def menu(listaopcoes):
 
 
 def menu_opcao(QtOpcs):
-    numeros = re.findall("(\d+)", ", ".join(QtOpcs))
+    numeros = re.findall(r"(\d+)", ", ".join(QtOpcs))
     opcao = input(f"Selecione uma opção [0-{len(QtOpcs)}]: ")
     if opcao == '0':
         countdown()
@@ -1682,13 +1682,13 @@ def main2(proxy, test=None):
 
         emails = []
         for x in destino:
-            if re.match("^(\d+(-)?\d+(@g\.us)?|\d{12,25})$", x):
+            if re.match(r"^(\d+(-)?\d+(@g\.us)?|\d{12,25})$", x):
                 send_whatsapp(x, item_type, get_graph)
 
             elif re.search("webhook.office.com", x.lower()):
                 send_teams(x, item_type, get_graph)
 
-            elif re.search("^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):
+            elif re.search(r"^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):
                 emails.append(x)
 
             else:
