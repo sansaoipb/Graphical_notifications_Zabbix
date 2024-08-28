@@ -65,7 +65,9 @@ Instale os pacotes:
 <pre><code>cd /tmp
 wget https://raw.githubusercontent.com/sansaoipb/scripts/master/notificacoes-docker.sh -O notificacoes.sh
 sudo dos2unix notificacoes.sh
-sudo bash notificacoes.sh</code></pre>
+sudo bash notificacoes.sh
+
+</code></pre>
 
 <br>
 <blockquote> <p>Faça o download da imagem</p> </blockquote>
