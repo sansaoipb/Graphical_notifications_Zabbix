@@ -67,6 +67,10 @@ wget https://raw.githubusercontent.com/sansaoipb/scripts/master/notificacoes-doc
 sudo dos2unix notificacoes.sh
 sudo bash notificacoes.sh</code></pre>
 
+<br>
+<blockquote> <p>Faça o download da imagem</p> </blockquote>
+
+<pre><code>docker pull sansaoipb/notificacoes:telegram</code></pre>
 
 # Comando para teste
 
