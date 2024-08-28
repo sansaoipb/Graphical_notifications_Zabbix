@@ -26,7 +26,7 @@
 </table>
 
 
-# Graphical Notifications Zabbix
+# Graphical Notifications Zabbix - Docker
 Em caso de dúvida, sugestão ou dificuldade junte-se a nós no <b>Grupo do Telegram</b> <a href="https://t.me/+bTDzmSmMPHYzOTJh" class="wikilink2" title="Ingressar no Grupo" rel="nofollow">Gráfico no Email e Telegram</a>.
 
 O "How to" foi testado no ZABBIX 3.0 ao 7.0.
