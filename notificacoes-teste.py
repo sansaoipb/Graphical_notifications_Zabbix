@@ -745,7 +745,13 @@ def send_whatsapp_free(token_wa, itemType, graph, url_base, message, destiny, sa
     if not status_Group:
         isGroup = False
 
-    groupName = status_Group[0]['name']
+    try:
+        groupName = status_Group[0]['name']
+    except IndexError:
+        Get_WA = get_WhatsApp(headers, f"{url_base}/all-contacts")
+        status_Group = [group for group in Get_WA if destiny == group['id']['user']]
+        groupName = status_Group[0]['name']
+
     if saudacao:
         saudacao, _ = saudacao.split(".")
         message = message.replace(saudacao, f"{saudacao}, {groupName}")
