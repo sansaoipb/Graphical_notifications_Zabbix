@@ -783,7 +783,7 @@ def send_teams(Lwebhook, itemType, get_graph):
             response = requests.post(webhook, headers=headers, json=payload)
             response.raise_for_status()
 
-            if response.reason == 'OK':
+            if re.search("OK|Accepted", response.reason):
                 print(responseOk.format(webhook))
                 log.writelog(responseOk.format(webhook), arqLog, "INFO")
 
@@ -1117,7 +1117,7 @@ def main(codeKey):
         elif re.search(r"^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):
             emails.append(x)
 
-        elif re.search("webhook.office.com", x.lower()):
+        elif re.search("webhook.office.com|workflows", x.lower()):
             teams.append(x)
 
         else:

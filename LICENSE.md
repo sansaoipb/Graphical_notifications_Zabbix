@@ -29,7 +29,7 @@
 # Graphical Notifications Zabbix - Docker
 Em caso de dúvida, sugestão ou dificuldade junte-se a nós no <b>Grupo do Telegram</b> <a href="https://t.me/+bTDzmSmMPHYzOTJh" class="wikilink2" title="Ingressar no Grupo" rel="nofollow">Gráfico no Email e Telegram</a>.
 
-O "How to" foi testado no ZABBIX 3.0 ao 7.0.
+O "How to" foi testado no 7.0.
 
 # Sumário
 <ul>
@@ -45,19 +45,18 @@ O "How to" foi testado no ZABBIX 3.0 ao 7.0.
 	</li>	
 </ul>
 
-<br>
 
 # Requisitos
-<b>1 – </b> Ter o Docker instalado no Zabbix server, caso precise, <a href="https://docs.docker.com/engine/install/" class="wikilink2" title="API Telegram" rel="nofollow"><b>clique aqui</b></a>.
+<b>1 – </b> Ter o Docker instalado <i>(não precisa ser no Zabbix server)</i>, caso precise, <a href="https://docs.docker.com/engine/install/" class="wikilink2" title="Docker install" rel="nofollow"><b>clique aqui</b></a>.
 <h3>
 Instale os pacotes:
 </h3>
 <blockquote> <p> Debian/Ubuntu</p> </blockquote>
-<pre><code>sudo apt-get install -y wget dos2unix git sudo curl bc</code></pre>
+<pre><code>sudo apt-get install -y wget dos2unix git sudo</code></pre>
 
 <br>
 <blockquote> <p>CentOS/Oracle Linux/Rocky Linux/Redhat+</p> </blockquote>
-<pre><code>sudo dnf install -y wget dos2unix git sudo curl bc gcc libffi-devel python3-devel openssl-devel libevent-devel</code></pre>
+<pre><code>sudo dnf install -y wget dos2unix git sudo</code></pre>
 
 <br>
 <blockquote> <p>Faça o download do script de instalação</p> </blockquote>
@@ -70,9 +69,17 @@ sudo bash notificacoes.sh
 </code></pre>
 
 <br>
-<blockquote> <p>Faça o download da imagem</p> </blockquote>
+<h3>
+Faça o download da imagem
+</h3>
+<blockquote> <p>Para Telegram, Email e Teams <i>(Todos ou somente um deles)</i>:</p> </blockquote>
 
 <pre><code>docker pull sansaoipb/notificacoes:telegram</code></pre>
+<br>
+
+<blockquote> <p>Para todas as soluções <i>(WhatsApp OpenSource, Telegram, Email e Teams)</i>:</p> </blockquote>
+
+<pre><code>docker pull sansaoipb/notificacoes:full</code></pre>
 
 # Comando para teste
 
@@ -81,28 +88,29 @@ sudo bash notificacoes.sh
 
 <b>1 – </b>"-123456789", "Nome Sobrenome" ou "usuário" são informações fictícias para exemplificar, busque um UserID ou nome de usuário válido no seu ambiente, se for grupo ou canal use prioritáriamente o "id";<br><br>
 
-<b>2 – </b> É recomendado aumentar o tempo de timeout da aplicação, então no arquivo de configuração do server.<br>
-(se não mudou o local padrão, estará aqui <code>/etc/zabbix/zabbix_server.conf</code> ou aqui <code>/usr/local/etc/zabbix_server.conf</code>)
-vá até o paramemtro <code>\# Timeout=3</code> descomente e aumente para 30, ficando assim: 
-<code>Timeout=30</code><br>
-dessa forma fica garantido a entrega.<br><br>
-<b>3 – </b> A estrutura de teste para o WhatsApp será (prefixo para o Brasil, DDD e número): <code>5522988776655</code>;<br>
-Para Telegram será: prioritariamente por ID (podendo usar também: 'Nome Sobrenome' ou '@usuário' se não estiver usando bot);<br>
+<b>2 – </b> A estrutura de teste para o WhatsApp será (prefixo para o Brasil, DDD e número): <code>5522988776655</code>;<br>
+Para Telegram será: prioritariamente por ID (se não estiver usando bot, pode usar também: 'Nome Sobrenome' ou '@usuário');<br>
 Para Email será: usuario@provedor.com.<br><br>
+
+<b>3 – </b> A estrutura de teste para o Teams será a URL do Webhook (que será descontinuado, para saber mais, <a href="https://devblogs.microsoft.com/microsoft365dev/retirement-of-office-365-connectors-within-microsoft-teams/" class="wikilink2" title="Microsoft informs" rel="nofollow"><b>clique aqui</b></a>) ou do Wokflow;<br>
+
 
 Script para realização do teste e iniciar a configuração:<br>
 <b>Script, ID, Nome ou user.</b><br>
 Exs:<br>
-<pre><code>docker run -v /etc/zabbix/scripts:/opt/scripts/ --rm -it sansaoipb/notificacoes:telegram /opt/scripts/notificacoes-teste.py --send "-123456789"</code></pre>
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it sansaoipb/notificacoes:telegram /etc/zabbix/scripts/notificacoes-teste.py --send "-123456789"</code></pre>
 ou
-<pre><code>docker run -v /etc/zabbix/scripts:/opt/scripts/ --rm -it sansaoipb/notificacoes:telegram /opt/scripts/notificacoes-teste.py --send "Nome Sobrenome"</code></pre>
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it sansaoipb/notificacoes:telegram /etc/zabbix/scripts/notificacoes-teste.py --send "Nome Sobrenome"</code></pre>
 ou
-<pre><code>docker run -v /etc/zabbix/scripts:/opt/scripts/ --rm -it sansaoipb/notificacoes:telegram /opt/scripts/notificacoes-teste.py --send "usuário"</code></pre><br>
-ou para realizar 3 envios simultaneomente, basta colocar as informações separados por vígula, por Ex:
-<pre><code>docker run -v /etc/zabbix/scripts:/opt/scripts/ --rm -it sansaoipb/notificacoes:telegram /opt/scripts/notificacoes-teste.py --send "-123456789, 5522988776655, usuario@provedor.com"</code></pre><br>
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it sansaoipb/notificacoes:telegram /etc/zabbix/scripts/notificacoes-teste.py --send "usuário"</code></pre>
+ou
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it sansaoipb/notificacoes:telegram /etc/zabbix/scripts/notificacoes-teste.py --send "URL_workflow"</code></pre><br>
+
+ou para realizar 4 envios simultaneamente, basta colocar as informações separados por vírgula, por Ex:
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --send "-123456789, 5522988776655, usuario@provedor.com, URL_workflow"</code></pre><br>
 
 <b>4 – </b> Para quem usa BOT, para pegar o ID (tanto do grupo/canal, como de tópico), basta copiar o link de alguma mensagem, como a estrutura abaixo.<br><br>
-<b>5 – </b> Caso seja Canal ou SuperGrupo, o ID precisará ser acionado "-100" a frente do ID, confome exemplo abaixo.<br><br>
+<b>5 – </b> Caso seja Canal ou SuperGrupo, o ID precisará ser acionado "-100" a frente do ID, conforme exemplo abaixo.<br><br>
 
 <table>
     <td colspan="3"><div align="center"> Grupo/Canal <br>https://t.me/c/4100493856/789654</div>
@@ -126,7 +134,7 @@ ou para realizar 3 envios simultaneomente, basta colocar as informações separa
 </table>
 <br>
 <b>Ex Grupo/Canal:</b><br>
-<pre><code>docker run -v /etc/zabbix/scripts:/opt/scripts/ --rm -it sansaoipb/notificacoes:telegram /opt/scripts/notificacoes-teste.py --send "-1004100493856"</code></pre><br>
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it sansaoipb/notificacoes:telegram /etc/zabbix/scripts/notificacoes-teste.py --send "-1004100493856"</code></pre><br>
 
 
 <table>
@@ -157,4 +165,4 @@ ou para realizar 3 envios simultaneomente, basta colocar as informações separa
 </table>
 <br>
 <b>Ex Tópico:</b><br>
-<pre><code>docker run -v /etc/zabbix/scripts:/opt/scripts/ --rm -it sansaoipb/notificacoes:telegram /opt/scripts/notificacoes-teste.py --send "-1004100493856_10562"</code></pre>
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it sansaoipb/notificacoes:telegram /etc/zabbix/scripts/notificacoes-teste.py --send "-1004100493856_10562"</code></pre>

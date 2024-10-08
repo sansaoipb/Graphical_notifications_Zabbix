@@ -85,7 +85,7 @@ else:
 
 # '''
 urlConfig = "https://raw.githubusercontent.com/sansaoipb/Graphical_notifications_Zabbix/main/configScripts.properties"
-configDefault = requests.get(urlConfig).text.replace("\r", "")
+configDefault = requests.get(urlConfig, verify=False).text.replace("\r", "")
 arqConfig = path.format('configScripts.properties')
 if not os.path.exists(arqConfig):
     contArq = configDefault
@@ -906,7 +906,7 @@ def send_teams(webhook, itemType, get_graph):
         response = requests.post(webhook, headers=headers, json=payload)
         response.raise_for_status()
 
-        if response.reason == 'OK':
+        if re.search("OK|Accepted", response.reason):
             print(responseOk.format(webhook))
             log.writelog(responseOk.format(webhook), arqLog, "INFO")
 
@@ -1685,7 +1685,7 @@ def main2(proxy, test=None):
             if re.match(r"^(\d+(-)?\d+(@g\.us)?|\d{12,25})$", x):
                 send_whatsapp(x, item_type, get_graph)
 
-            elif re.search("webhook.office.com", x.lower()):
+            elif re.search("webhook.office.com|workflows", x.lower()):
                 send_teams(x, item_type, get_graph)
 
             elif re.search(r"^.*@[a-z0-9-]+\.[a-z]+(\.[a-z].*)?$", x.lower()):

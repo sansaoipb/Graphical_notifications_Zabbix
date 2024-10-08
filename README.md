@@ -342,7 +342,7 @@ Comando para teste
 
 <b>2 – </b> É recomendado aumentar o tempo de timeout da aplicação, então no arquivo de configuração do server.<br>
 (se não mudou o local padrão, estará aqui <code>/etc/zabbix/zabbix_server.conf</code> ou aqui <code>/usr/local/etc/zabbix_server.conf</code>)
-vá até o paramemtro <code>\# Timeout=3</code> descomente e aumente para 30, ficando assim: 
+vá até o parâmetro <code>\# Timeout=3</code> descomente e aumente para 30, ficando assim: 
 <code>Timeout=30</code><br>
 dessa forma fica garantido a entrega.<br><br>
 <b>3 – </b> A estrutura de teste para o WhatsApp será (prefixo para o Brasil, DDD e número): <code>5522988776655</code>;<br>
@@ -357,11 +357,11 @@ ou
 <pre><code>sudo -u zabbix ./notificacoes-teste.py --send "Nome Sobrenome"</code></pre>
 ou
 <pre><code>sudo -u zabbix ./notificacoes-teste.py --send "usuário"</code></pre><br>
-ou para realizar 3 envios simultaneomente, basta colocar as informações separados por vígula, por Ex:
+ou para realizar 3 envios simultaneamente, basta colocar as informações separados por vírgula, por Ex:
 <pre><code>sudo -u zabbix ./notificacoes-teste.py --send "-123456789, 5522988776655, usuario@provedor.com"</code></pre><br>
 
 <b>4 – </b> Para quem usa BOT, para pegar o ID (tanto do grupo/canal, como de tópico), basta copiar o link de alguma mensagem, como a estrutura abaixo.<br><br>
-<b>5 – </b> Caso seja Canal ou SuperGrupo, o ID precisará ser acionado "-100" a frente do ID, confome exemplo abaixo.<br><br>
+<b>5 – </b> Caso seja Canal ou SuperGrupo, o ID precisará ser acionado "-100" a frente do ID, conforme exemplo abaixo.<br><br>
 
 <table>
     <td colspan="3"><div align="center"> Grupo/Canal <br>https://t.me/c/4100493856/789654</div>
@@ -611,7 +611,7 @@ aprimorando e dando mais possibilidades para o projeto.
 
 - Ao "Marcílio MR TELECOM"
 (<a href="https://t.me/MarcilioMRTelecom" class="wikilink2" title="Conversar com ele" rel="nofollow">@MarcilioMRTelecom</a>) 
-que dedicou seu tempo para testar e disponibilizar o projeto dd API do WhatsApp OpenSource, 
+que dedicou seu tempo para testar e disponibilizar o projeto da API do WhatsApp OpenSource, 
 nos dando essa nova possibilidade.
 
 Obrigado a todos os envolvidos, tanto pela disponibilidade para fazer os teste, como pela ajuda, confiança e coparticipação nos projetos.  
