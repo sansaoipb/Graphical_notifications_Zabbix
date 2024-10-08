@@ -81,8 +81,10 @@ zbx_user = PropertiesReaderX(path.format('configScripts.properties')).getValue('
 zbx_pass = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'pass')
 
 # Graph settings | Configuracao do Grafico #############################################################################
-height = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'height')  # Graph height | Altura
-width = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'width')  # Graph width  | Largura
+height = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection',
+                                                                             'height')  # Graph height | Altura
+width = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection',
+                                                                            'width')  # Graph width  | Largura
 
 # Ack message | Ack da Mensagem ########################################################################################
 Ack = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'ack')
@@ -353,8 +355,8 @@ def send_mail(dest, itemType, get_graph, key):
             try:
                 smtp.login(mail_user, mail_pass)
             except smtplib.SMTPAuthenticationError as msg:
-                log.writelog('Error: Unable to send email | Não foi possível enviar o e-mail - {0}'.format(
-                    msg.smtp_error.decode("utf-8").split(". ")[0]), arqLog, "WARNING")
+                texto = 'Error: Unable to send email | Não foi possível enviar o e-mail - {0}'.format(msg.smtp_error.decode("utf-8").split(". ")[0])
+                log.writelog(texto, arqLog, "WARNING")
                 smtp.quit()
                 exit()
             except smtplib.SMTPException:
@@ -363,9 +365,8 @@ def send_mail(dest, itemType, get_graph, key):
         try:
             smtp.sendmail(mail_from, dest, msgRoot.as_string())
         except Exception as msg:
-            log.writelog('Error: Unable to send email | Não foi possível enviar o e-mail - {0}'.format(
-                msg.smtp_error.decode("utf-8").split(". ")[0]), arqLog,
-                "WARNING")
+            texto = 'Error: Unable to send email | Não foi possível enviar o e-mail - {0}'.format(msg.smtp_error.decode("utf-8").split(". ")[0])
+            log.writelog(texto, arqLog, "WARNING")
             smtp.quit()
             exit()
 
@@ -373,14 +374,17 @@ def send_mail(dest, itemType, get_graph, key):
             if nograph not in argvs:
                 ack(dests, messageE)
 
-        log.writelog('Email sent successfully | Email enviado com sucesso ({0})'.format(dests), arqLog, "INFO")
+        texto = 'Email sent successfully | Email enviado com sucesso ({0})'.format(dests)
+        log.writelog(texto, arqLog, "INFO")
         smtp.quit()
     except smtplib.SMTPException as msg:
-        log.writelog('Error: Unable to send email | Não foi possível enviar o e-mail ({0})'.format(msg), arqLog,
-                     "WARNING")
+        texto = 'Error: Unable to send email | Não foi possível enviar o e-mail ({0})'.format(msg)
+        log.writelog(texto, arqLog, "WARNING")
         logout_api(auth)
         smtp.quit()
         exit()
+
+    return texto
 
 
 def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
@@ -503,27 +507,26 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
             Id = int(Id)
             sendMsg = """{}{}\n{}""".format(saudacao.format(dest), sys.argv[2], msg)
             if re.match("([03])", itemType):
-                try:
-                    import io; graph = io.BytesIO(get_graph.content)
-                    # graph = '{0}/{1}.png'.format(graph_path, triggerid)
-                    # with open(graph, 'wb') as png:
-                    #     png.write(get_graph.content)
-                except BaseException as err:
-                    log.writelog(
-                        '{1} >> An error occurred at save graph file in {0} | Ocorreu um erro ao salvar o grafico no diretório {0}'.format(
-                            graph_path, str(err)), arqLog, "WARNING")
-                    logout_api(auth)
-                    exit()
+                import io
+                graph = io.BytesIO(get_graph.content)
+                # try:
+                #     # graph = '{0}/{1}.png'.format(graph_path, triggerid)
+                #     # with open(graph, 'wb') as png:
+                #     #     png.write(get_graph.content)
+                # except BaseException as err:
+                #     log.writelog(
+                #         '{1} >> An error occurred at save graph file in {0} | Ocorreu um erro ao salvar o grafico no diretório {0}'.format(
+                #             graph_path, str(err)), arqLog, "WARNING")
+                #     logout_api(auth)
+                #     exit()
 
                 try:
                     app.send_photo(Id, graph, caption=sendMsg, reply_to_message_id=topic)
-                    log.writelog(
-                        'Telegram sent photo message successfully | Telegram com gráfico enviado com sucesso ({0})'.format(
-                            dest), arqLog, "INFO")
+                    texto = 'Telegram sent photo message successfully | Telegram com gráfico enviado com sucesso ({0})'.format(dest)
+                    log.writelog(texto, arqLog, "INFO")
                 except Exception as err:
-                    log.writelog(
-                        '{0} >> Telegram FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo telegram ({1})'.format(
-                            err, dest), arqLog, "ERROR")
+                    texto = 'Telegram FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo telegram ({0})\n{1}'.format(dest, err)
+                    log.writelog(texto, arqLog, "ERROR")
                     logout_api(auth)
                     exit()
 
@@ -535,18 +538,19 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
             else:
                 try:
                     app.send_message(Id, sendMsg, reply_to_message_id=topic)
-                    log.writelog('Telegram sent successfully | Telegram enviado com sucesso ({0})'.format(dest), arqLog,
-                                 "INFO")
+                    texto = 'Telegram sent successfully | Telegram enviado com sucesso ({0})'.format(dest)
+                    log.writelog(texto, arqLog, "INFO")
                 except Exception as err:
-                    log.writelog(
-                        '{0} >> Telegram FAIL at sending message | FALHA ao enviar a mensagem pelo telegram ({1})'.format(
-                            err, dest), arqLog, "ERROR")
+                    texto = 'Telegram FAIL at sending message | FALHA ao enviar a mensagem pelo telegram ({1})\n{0}'.format(dest, err)
+                    log.writelog(texto, arqLog, "ERROR")
                     logout_api(auth)
                     exit()
 
             if re.search("(sim|s|yes|y)", str(Ack).lower()):
                 if nograph not in argvs:
                     ack(dest, messageT)
+
+            return texto
 
 
 def get_WhatsApp(headers, url):
@@ -584,6 +588,7 @@ def send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destin
 
                 log.writelog(texto, arqLog, "INFO")
                 log.writelog('{0}'.format(result_str), arqLog, "INFO")
+                return texto
 
         except Exception as err:
             log.writelog('{0}'.format(str(err)), arqLog, "ERROR")
@@ -649,7 +654,7 @@ def send_whatsapp_free(token_wa, itemType, graph, url_base, message, destiny, sa
     try:
         result = requests.post(url, json=data, headers=headers)
         if result.status_code != 201:
-            # texto = 'WhatsApp FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo WhatsApp\n{}'
+            texto = 'WhatsApp FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo WhatsApp\n{}'
             error = json.loads(result.content.decode("utf-8"))['error']['name']
             log.writelog('{0}'.format(error), arqLog, "ERROR")
 
@@ -659,6 +664,7 @@ def send_whatsapp_free(token_wa, itemType, graph, url_base, message, destiny, sa
             r = json.loads(result.text)
             log.writelog('{}: {}'.format(r["status"], r['response']), arqLog, "INFO")
 
+        return texto
     except Exception as err:
         log.writelog('{0}'.format(str(err)), arqLog, "ERROR")
         exit()
@@ -673,8 +679,10 @@ def send_whatsapp(Ldestiny, itemType, get_graph, key):
 
     # WhatsApp Open source | Codigo aberto WhatsApp ####################################################################
     wa_free = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'open.source')
-    url_base_free = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'open.source.url')
-    api_token = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp', 'open.source.token')
+    url_base_free = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp',
+                                                                                        'open.source.url')
+    api_token = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionWhatsApp',
+                                                                                    'open.source.token')
     ####################################################################################################################
 
     try:
@@ -719,14 +727,16 @@ def send_whatsapp(Ldestiny, itemType, get_graph, key):
     for destiny in Ldestiny:
         if re.search("(sim|s|yes|y)", str(wa_free).lower()):
             url_base = url_base_free
-            send_whatsapp_free(api_token, itemType, graph, url_base, message, destiny, saudacao)
+            resultado = send_whatsapp_free(api_token, itemType, graph, url_base, message, destiny, saudacao)
         else:
             url_base = f"http://api.meuaplicativo.vip:{port}/services"
-            send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destiny)
+            resultado = send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destiny)
 
         if re.search("(sim|s|yes|y)", str(Ack).lower()):
             if nograph not in argvs:
                 ack(destiny, messageW)
+
+        return resultado
 
 
 def send_teams(Lwebhook, itemType, get_graph):
@@ -757,7 +767,7 @@ def send_teams(Lwebhook, itemType, get_graph):
         image = b64encode(get_graph.content).decode()
         responseOk = 'Teams sent photo message successfully | Teams com gráfico enviado com sucesso\n{0}'
         responsePro = 'Teams FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo Teams\n{0}'
-        bodyMsg.append({"type": "Image","url": f"data:image/png;base64,{image}","msTeams": {"allowExpand": True}})
+        bodyMsg.append({"type": "Image", "url": f"data:image/png;base64,{image}", "msTeams": {"allowExpand": True}})
 
     else:
         responseOk = 'Teams sent successfully | Teams enviado com sucesso ({0})'
@@ -775,7 +785,7 @@ def send_teams(Lwebhook, itemType, get_graph):
                 "type": "AdaptiveCard",
                 "version": "1.0",
                 "body": bodyMsg
-                }
+            }
         }]
     }
 
@@ -785,13 +795,15 @@ def send_teams(Lwebhook, itemType, get_graph):
             response.raise_for_status()
 
             if re.search("OK|Accepted", response.reason):
-                print(responseOk.format(webhook))
-                log.writelog(responseOk.format(webhook), arqLog, "INFO")
+                resultado = responseOk.format(webhook)
+                # print(resultado)
+                log.writelog(resultado, arqLog, "INFO")
 
             else:
                 error = response.content.decode("utf-8")
-                print(responsePro.format(error))
-                log.writelog(responsePro.format(error), arqLog, "ERROR")
+                resultado = responsePro.format(error)
+                # print(resultado)
+                log.writelog(resultado, arqLog, "ERROR")
 
         except Exception as err:
             print(err)
@@ -801,6 +813,8 @@ def send_teams(Lwebhook, itemType, get_graph):
         if re.search("(sim|s|yes|y)", str(Ack).lower()):
             if nograph not in argvs:
                 ack(webhook, messageT)
+
+        return resultado
 
 
 def zbx_token(key):
@@ -829,7 +843,7 @@ def zbx_token(key):
                     "id": 1
                 }
             )
-        )
+                                  )
 
         login_api = json.loads(login_api.text.encode('utf-8'))
 
@@ -864,7 +878,7 @@ def version_api():
                 "id": 5
             }
         )
-    )
+                              )
     resultado = json.loads(resultado.content)
     if 'result' in resultado:
         resultado = resultado["result"]
@@ -882,7 +896,7 @@ def logout_api(auth_token):
                 "id": 4
             }
         )
-    )
+                  )
 
 
 def getgraph(triggerName, hostName, listaItemIds, period):
@@ -1025,7 +1039,7 @@ def getTrigger(triggerid):
                     "id": 2
                 }
             )
-        )
+                                  )
 
         if triggerid.status_code != 200:
             log.writelog(f'HTTPError {triggerid.status_code}: {triggerid.reason}', arqLog, "WARNING")
@@ -1124,17 +1138,24 @@ def main(codeKey):
         else:
             telegrams.append(x)
 
+    listaStatus = []
     if whatsapps:
-        send_whatsapp(whatsapps, item_type, get_graph, codeKey)
+        status = send_whatsapp(whatsapps, item_type, get_graph, codeKey)
+        listaStatus.append({"whatsapp": {"status": status}})
 
     if teams:
-        send_teams(teams, item_type, get_graph)
+        status = send_teams(teams, item_type, get_graph)
+        listaStatus.append({"teams": {"status": status}})
 
     if telegrams:
-        send_telegram(telegrams, item_type, get_graph, codeKey, proxy)
+        status = send_telegram(telegrams, item_type, get_graph, codeKey, proxy)
+        listaStatus.append({"telegram": {"status": status}})
 
     if emails:
-        send_mail(emails, item_type, get_graph, codeKey)
+        status = send_mail(emails, item_type, get_graph, codeKey)
+        listaStatus.append({"email": {"status": status}})
+
+    return listaStatus
 
 
 if __name__ == '__main__':

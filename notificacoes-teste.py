@@ -620,18 +620,19 @@ def send_telegram(dest, itemType, get_graph, triggerid, valueProxy):
         Id = int(Id)
         sendMsg = """{}{}\n{}""".format(saudacao.format(dest), subject, body)
         if re.match("([03])", itemType):
-            try:
-                import io; graph = io.BytesIO(get_graph.content)
-                # graph = '{0}/{1}.png'.format(graph_path, triggerid)
-                # graph = os.path.join(os.getcwd() if os.name == "nt" else graph_path, f'{triggerid}.png')
-                # with open(graph, 'wb') as png:
-                #     png.write(get_graph.content)
-            except BaseException as e:
-                log.writelog(
-                    '{1} >> An error occurred at save graph file in {0} | Ocorreu um erro ao salvar o grafico no diretório {0}'.format(
-                        graph_path, str(e)), arqLog, "WARNING")
-                logout_api()
-                exit()
+            import io
+            graph = io.BytesIO(get_graph.content)
+            # try:
+            #     # graph = '{0}/{1}.png'.format(graph_path, triggerid)
+            #     # graph = os.path.join(os.getcwd() if os.name == "nt" else graph_path, f'{triggerid}.png')
+            #     # with open(graph, 'wb') as png:
+            #     #     png.write(get_graph.content)
+            # except BaseException as e:
+            #     log.writelog(
+            #         '{1} >> An error occurred at save graph file in {0} | Ocorreu um erro ao salvar o grafico no diretório {0}'.format(
+            #             graph_path, str(e)), arqLog, "WARNING")
+            #     logout_api()
+            #     exit()
 
             try:
                 app.send_photo(Id, graph, caption=sendMsg, reply_to_message_id=topic)
