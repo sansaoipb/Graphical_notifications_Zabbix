@@ -330,7 +330,7 @@ def send_mail(dest, itemType, get_graph, key):
 
     text = '{0}<p>{1}</p>'.format(saudacao, msg)
 
-    if re.search("([03])", itemType):
+    if re.match("([03])", itemType):
         URL = urlGraph.replace("width=900&height=200", "width=1400&height=300")
         text += f'<br><a href="{URL}"><img src="cid:image1"></a>'
         msgImage = MIMEImage(get_graph.content)
@@ -502,11 +502,12 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
 
             Id = int(Id)
             sendMsg = """{}{}\n{}""".format(saudacao.format(dest), sys.argv[2], msg)
-            if re.search("([03])", itemType):
+            if re.match("([03])", itemType):
                 try:
-                    graph = '{0}/{1}.png'.format(graph_path, triggerid)
-                    with open(graph, 'wb') as png:
-                        png.write(get_graph.content)
+                    import io; graph = io.BytesIO(get_graph.content)
+                    # graph = '{0}/{1}.png'.format(graph_path, triggerid)
+                    # with open(graph, 'wb') as png:
+                    #     png.write(get_graph.content)
                 except BaseException as err:
                     log.writelog(
                         '{1} >> An error occurred at save graph file in {0} | Ocorreu um erro ao salvar o grafico no diretório {0}'.format(
@@ -526,10 +527,10 @@ def send_telegram(Ldest, itemType, get_graph, key, valueProxy):
                     logout_api(auth)
                     exit()
 
-                try:
-                    os.remove(graph)
-                except Exception as err:
-                    log.writelog('{0}'.format(str(err)), arqLog, "ERROR")
+                # try:
+                #     os.remove(graph)
+                # except Exception as err:
+                #     log.writelog('{0}'.format(str(err)), arqLog, "ERROR")
 
             else:
                 try:
@@ -561,7 +562,7 @@ def get_WhatsApp(headers, url):
 
 def send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destiny):
     message = quote(b64encode(message.encode("utf-8")))
-    if re.search("([03])", itemType):
+    if re.match("([03])", itemType):
         Graph = quote(graph)
         try:
             headers = {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -637,7 +638,7 @@ def send_whatsapp_free(token_wa, itemType, graph, url_base, message, destiny, sa
         "message": message.replace("\\n", "\n"),
     }
 
-    if re.search("([03])", itemType):
+    if re.match("([03])", itemType):
         data["caption"] = data.pop("message")
         data["base64"] = f'data:image/png;base64,{graph.decode()}'
         url = f'{url_base}/send-image'
@@ -752,7 +753,7 @@ def send_teams(Lwebhook, itemType, get_graph):
     headers = {'Content-Type': 'application/json'}
     bodyMsg = [{"type": "TextBlock", "text": subject, "weight": "bolder", "wrap": True}]
 
-    if re.search("([03])", itemType):
+    if re.match("([03])", itemType):
         image = b64encode(get_graph.content).decode()
         responseOk = 'Teams sent photo message successfully | Teams com gráfico enviado com sucesso\n{0}'
         responsePro = 'Teams FAIL at sending photo message | FALHA ao enviar mensagem com gráfico pelo Teams\n{0}'
