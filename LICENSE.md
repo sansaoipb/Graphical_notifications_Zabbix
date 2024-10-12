@@ -143,7 +143,7 @@ Faça o download da imagem
 Configuração do WhatsApp OpenSource
 </h3>
 Depois de validar que o serviço está operacional <i>(inserindo o IP no navegador)</i>, siga os próximos passos.<br>
-1 - Acesse <b><u>http://IP_do_server:8080/api-docs/</u></b> e execute 2 ações nessa pagina, "/api/{session}/{secretkey}/generate-token" e "/api/{session}/start-session"
+1 - Acesse <b><u>http://IP_do_server:8080/api-docs/</u></b> e execute 2 ações nessa pagina, "/api/{session}/{secretkey}/generate-token" e "/api/{session}/start-session"<br>
 
 <blockquote> <p>Gerando Token</p> </blockquote>
 
