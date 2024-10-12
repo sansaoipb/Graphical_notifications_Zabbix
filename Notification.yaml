@@ -1,0 +1,93 @@
+zabbix_export:
+  version: '7.0'
+  media_types:
+    - name: Notification
+      type: WEBHOOK
+      parameters:
+        - name: Message
+          value: '{ALERT.MESSAGE}'
+        - name: Subject
+          value: '{ALERT.SUBJECT}'
+        - name: To
+          value: '{ALERT.SENDTO}'
+        - name: Url
+          value: '<PLACE ENDPOINT URL>'
+      script: |
+        var Notification = {
+            url_r: null,
+            to: null,
+            subject: null,
+            message: null,
+        
+            sendMessage: function () {
+                var response,
+                    request = new HttpRequest(),
+                    url = Notification.url_r + '/send?send_to=' + Notification.to + '&subject=' + Notification.subject + '&message=' + Notification.message;
+        
+                request.addHeader('Content-Type: application/json');
+                Zabbix.log(4, '[Notification Webhook] URL: ' + url);
+                response = request.post(url);
+                Zabbix.log(4, '[Notification Webhook] HTTP code: ' + request.getStatus());
+        
+                try {
+                    response = JSON.parse(response);
+                }
+                catch (error) {
+                    response = null;
+                }
+        
+                if (request.getStatus() !== 200) {
+                    if (typeof response.description === 'string') {
+                        throw response.description;
+                    }
+                    else {
+                        throw 'Unknown error. Check debug log for more information.';
+                    }
+                } 
+            }
+        };
+        
+        try {
+            var params = JSON.parse(value)
+        
+            if (typeof params.Url === 'undefined') {
+                throw 'Incorrect value is given for parameter "Url": parameter is missing';
+            }
+        
+            //return JSON.stringify(params, null, 2)
+        
+            Notification.url_r = params.Url.endsWith('/') ? params.Url.slice(0, -1) : params.Url;
+            Notification.to = encodeURIComponent(params.To);
+            Notification.subject = encodeURIComponent(params.Subject);
+            Notification.message = encodeURIComponent(params.Message);
+            Notification.sendMessage();
+            return "Enviado";
+        }
+        catch (error) {
+            Zabbix.log(4, '[Notification Webhook] notification failed: ' + error);
+            throw 'Sending failed: ' + error + '.';
+        }
+      timeout: 60s
+      message_templates:
+        - event_source: TRIGGERS
+          operation_mode: PROBLEM
+          subject: '❌ Problema: {EVENT.NAME} ❌'
+          message: |
+            {TRIGGER.ID}#{EVENT.ID}#FF0000#10800#
+            ⚠️ Status do Host: {STATUS}
+             ❓ Severidade: {TRIGGER.SEVERITY}
+            ⏰ Data e Hora: {EVENT.DATE} as {EVENT.TIME}
+            ⚙️ SERVIDOR: {HOST.NAME}⚙️
+             ❗️   Evento ID: {EVENT.ID}
+        - event_source: TRIGGERS
+          operation_mode: RECOVERY
+          subject: '✅ Resolvido: {EVENT.NAME} ✅'
+          message: |
+            {TRIGGER.ID}#{EVENT.ID}#00C800#3600#
+             ⏳ Duração: {EVENT.DURATION}
+            ⏰ Data e Hora: {EVENT.RECOVERY.DATE} as {EVENT.RECOVERY.TIME}
+            ⚙️ SERVIDOR: {HOST.NAME}⚙️
+            ⚠️ Status do Host: {STATUS}
+             ❓ Severidade: {TRIGGER.SEVERITY}
+             ❗️  Evento ID: {EVENT.ID}
+            
