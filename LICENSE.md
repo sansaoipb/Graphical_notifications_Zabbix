@@ -140,11 +140,33 @@ Faça o download da imagem
 
 # Criando Chave API WhatsApp
 <h3>
-Instalação do WhatsApp OpenSource
+Configuração do WhatsApp OpenSource
 </h3>
 Depois de validar que o serviço está operacional <i>(inserindo o IP no navegador)</i>, siga os próximos passos.<br>
+1 - Acesse <b><u>http://IP_do_server:8080/api-docs/</u></b> e execute 2 ações nessa pagina, "/api/{session}/{secretkey}/generate-token" e "/api/{session}/start-session"
 
-## Descrever os passos e inserir os prints para configurar
+<blockquote> <p>Gerando Token</p> </blockquote>
+
+generate-token
+<img src="https://lh3.googleusercontent.com/pw/AP1GczOjuGybwUXOqYlCCFxZwgG2YVnKpXuw_yFsqi0U--uQUAglo9TKw1sNieHOknyndy5oSUPQsQFtwXSBLJ7VKRBk6fgA_1vOY7zAEBJRjuuOciqdPZZmS_VPHzsnNfQgACvD5cpsfyiNpE2BSZ-4nFq2rw=w1879-h655-s-no-gm?authuser=0"/>
+
+Clique em "Try it out", altere o "session", clique em "Execute" e copie o valor do atributo "token"
+<img src="https://lh3.googleusercontent.com/pw/AP1GczM_dsyDWF9nmVcSQ9ff-GvqWEu68qfZFEuHp2NxjFGwcF-uGMmiOLmadMGOejErK_SAdhQhZk7DnS1dA0_hkMQggi37iRdxywMQ6fuEj77kd6_T3_Sd1xSiYQvvY9JJGIcvFJSEV_Tmtq6p-1TTm_57VA=w1868-h713-s-no-gm?authuser=0"/>
+
+Suba até "Authorize"...
+<img src="https://lh3.googleusercontent.com/pw/AP1GczOx8pNGp9nMGCuHNE4DMsQU3_htnQrO5lWV-xIXRJBbXJpRN5PXpmoADs4CnuMo4_snE2bnWAiinmZULWtILsJYslXU2RMBQGLOsUvYna17kWEdDl_WNepVa2XK0DIKEkpbcP0s7kXNcfw-O7At6r-psw=w1910-h415-s-no-gm?authuser=0"/>
+
+Insira o token em "Value" e armazene com o botão "authorize" e depois em "Close"
+<img src="https://lh3.googleusercontent.com/pw/AP1GczOuon042PdpzVwbebJ86Yv3eQp4b562a42y8-9UlADvWi1V5s9Xk_xg1QSGzmDM_3Y5iM3vG6efXwBZVbm6xg4WKqSlGZ6s1B5mLWnwCXbUy-t0zjHLBUWm4h-eii8-mrWXmW2BALJHSFE7YLbOHgjikw=w1141-h485-s-no-gm?authuser=0"/>
+
+2 - Acesse o log da aplicação com o comando:
+<pre><code>docker exec -it sendgraph pm2 logs</code></pre>
+
+<img src="https://lh3.googleusercontent.com/pw/AP1GczN_7VoHuUnQuF9mHiZPRll3UCrF0I25xL_iaoEEySKW89Ynrrv6IqSnpvV-LLrO44t-H_IM8uK24YsLmOd3wxIo7toJpJ0i5KU0SoVi45Q-3kMHJ7SdqExrYH1BB45AKjltgk4wYBLt05tFI7O6BxLzzA=w1493-h678-s-no-gm?authuser=0"/>
+
+Depois do log aberto, vá para "start-session", execute e posteriormente, volte ao log para ler o QR Code para conectar o WhatsApp 
+<img src="https://lh3.googleusercontent.com/pw/AP1GczPWy9mAQiApoKqld0B0RGYLtTtWQ_cVuIYOhfukprQscQa8d82UuX-ew4N7q0uVw5Pb3IBOdSeyDtpILiUBHXSxXznpwonw9tLWOewfks5p4zq5yxh3zclkOZTMJR3w9vHw6RJnJzVdfpcPjOyqS3fSOg=w1856-h387-s-no-gm?authuser=0"/>
+
 
 <!--
 Caso o serviço não esteja OK, entre em contato no "grupo de ajuda" supracitado, para mais detalhes sobre a configuração, mas consulte o git do mantenedor e assista o video disponibilizado: <br>
