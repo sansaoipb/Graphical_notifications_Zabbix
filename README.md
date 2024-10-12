@@ -170,7 +170,7 @@ Depois de aprovisionar VM, realize a instalação <b>OpenSource</b> no <b><u>Ubu
 
 <pre><code>curl -sSL https://raw.githubusercontent.com/marcilioramos/alert_wpp_zabbix/main/config_ambiente.sh | bash </code></pre>
 
-Depois de validar que o serviço está operacional, siga os proximos passos.<br>
+Depois de validar que o serviço está operacional, siga os próximos passos.<br>
 Caso o serviço não esteja OK, entre em contato no "grupo de ajuda" supracitado, para mais detalhes sobre a configuração, mas consulte o git do mantenedor e assista o video disponibilizado:<br>
 <a href="https://github.com/marcilioramos/alert_wpp_zabbix" class="wikilink2" title="Acessar github" rel="nofollow">alert_wpp_zabbix</a></i>
 (<a href="https://t.me/MarcilioMRTelecom" class="wikilink2" title="Conversar com ele" rel="nofollow">@MarcilioMRTelecom</a></i>)
@@ -293,12 +293,12 @@ Mas somente para quem estiver <b>USANDO CONTA.</b> e não <b>BOT</b>
 
 <pre><code>sudo -u zabbix ./notificacoes-teste.py --infoAll</code></pre>
 
-<b>3 – </b> Ao executar o comando acima, será solicitado inserir o token do bot ou número de telefone da conta que será usada para envio, 
+<b>4 – </b> Ao executar o comando acima, será solicitado inserir o token do bot ou número de telefone da conta que será usada para envio, 
 se optar por <b>usar BOT</b>, cole o token, dê ENTER e
 <b>DESCONSIDERE OS PRÓXIMOS PASSOS, <a href="#comando-para-teste"><u>CLICANDO AQUI</u></a></b> <br>
 
 
-<b>4 – </b> Se optar por <b>usar CONTA</b>, use a seguinte estrutura de telefone 
+<b>5 – </b> Se optar por <b>usar CONTA</b>, use a seguinte estrutura de telefone 
 <code>5522988776655</code> (prefixo para o Brasil, DDD e número), 
 depois que der “Enter”, receberá um código por SMS e/ou no aplicativo 
 <i>(no desktop, no celular ou na versão web, basta estar logado)</i>, 
@@ -336,7 +336,7 @@ Comando para teste
 # Comando para teste
 
 <b>OBS:</b><br>
-<b>0 – </b> Para envio do WhatsApp, não é possivel o envio por nome, é <b><u>SOMENTE POR "ID"</u></b>. 
+<b>0 – </b> Para envio do WhatsApp, não é possível o envio por nome, é <b><u>SOMENTE POR "ID"</u></b>. 
 
 <b>1 – </b>"-123456789", "Nome Sobrenome" ou "usuário" são informações fictícias para exemplificar, busque um UserID ou nome de usuário válido no seu ambiente, se for grupo ou canal use prioritáriamente o "id";<br><br>
 
@@ -439,7 +439,7 @@ Na versão 3.0, é obrigatório a utilização das macros <code>{ALERT.SENDTO}</
 -->
 
 <img src="https://lh3.googleusercontent.com/pw/ACtC-3fsUm053aTiLCqXzGeHD6nhvsKSdoOlYggUCYqk1UtOIiQM6G9ZQGZjt8vs0-AxDvued87CTrHusOnTBIG7oQZPeTuHYWZNN6TTM7zGMc_AZD-L9JrLVPhO11J-FZUFBStmPlPIo1jWs1zMmokXJmFnxA=w830-h346-no?authuser=0"/><br><br>
-<blockquote> Variaveis para o tipo de mídia</blockquote>
+<blockquote> Variáveis para o tipo de mídia</blockquote>
 <pre><code>{ALERT.SENDTO}
 {ALERT.SUBJECT}
 {ALERT.MESSAGE}</code></pre>
@@ -539,10 +539,10 @@ Vamos entender um pouco as funções configuráveis do arquivo de configuração
         open.source - Define se vc estará usando a API paga ou open source.
     </li>
     <li>
-        open.source.url - Se definir o campo acima como <b>yes</b>>, precisará apontar a URL na estrutura: <b>http://IP_da_VM/api/nome_da_sessao_criada</b>>
+        open.source.url - Se definir o campo acima como <b>yes</b>, precisará apontar a URL na estrutura: <b>http://IP_da_VM/api/nome_da_sessao_criada</b>
     </li>
     <li>
-        open.source.token - Se definir o campo acima como <b>yes</b>>, precisará informar o token gerado.
+        open.source.token - Se definir o campo acima como <b>yes</b>, precisará informar o token gerado.
     </li>
 </ul>
 
