@@ -354,20 +354,23 @@ sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --send "-1
 
 <table>
     <td colspan="3"><div align="center"> Grupo/Canal <br>https://t.me/c/4100493856/789654</div>
-        <td> <!-- Group/Channel -->
-            <h4>
-                <div align="center">ID Grupo/Canal </div>
-            </h4>
-                <div align="center">4100493856 </div>
-        </td>
-        <td> <!-- Message -->
-            <h4>
-                <div align="center">ID Msg</div>
-            </h4>
-                <div align="center">789654</div>
-        </td>
+        <tr>
+            <td> <!-- Group/Channel -->
+                <h4>
+                    <div align="center">ID Grupo/Canal </div>
+                </h4>
+                    <div align="center">4100493856 </div>
+            </td>
+            <td> <!-- Message -->
+                <h4>
+                    <div align="center">ID Msg</div>
+                </h4>
+                    <div align="center">789654</div>
+            </td>
+        </tr>
         <td colspan="3"><div align="center"> <u>ID para envio</u><br><b>-1004100493856</b></div>
         </td>
+    </td>
 </table>
 <br>
 <b>Ex Grupo/Canal: </b><br>
@@ -377,26 +380,29 @@ sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --send "-1
 
 <table>
     <td colspan="3"><div align="center">Tópico <br>https://t.me/c/4100493856/10562/789654</div>
-        <td> <!-- Group/Channel -->
-            <h4>
-                <div align="center">ID Grupo/Canal </div>
-            </h4>
-                <div align="center">4100493856 </div>
-        </td>
-        <td> <!-- Topic -->
-            <h4>
-                <div align="center">Tópico</div>
-            </h4>
-            <div align="center">10562</div>
-        </td>
-        <td> <!-- Message -->
-            <h4>
-                <div align="center">ID Msg</div>
-            </h4>
-                <div align="center">789654</div>
-        </td>
+        <tr>
+            <td> <!-- Group/Channel -->
+                <h4>
+                    <div align="center">ID Grupo/Canal </div>
+                </h4>
+                    <div align="center">4100493856 </div>
+            </td>
+            <td> <!-- Topic -->
+                <h4>
+                    <div align="center">Tópico</div>
+                </h4>
+                <div align="center">10562</div>
+            </td>
+            <td> <!-- Message -->
+                <h4>
+                    <div align="center">ID Msg</div>
+                </h4>
+                    <div align="center">789654</div>
+            </td>
+        </tr>
         <td colspan="3"><div align="center"> <u>ID para envio</u><br><b>-1004100493856_10562</b></div>
         </td>
+    </td>
 </table>
 <br>
 <b>Ex Tópico: </b><br>
