@@ -129,7 +129,7 @@ Faça o download da imagem
 
 <br>
 <blockquote> <p>Subindo o container: </p> </blockquote>
-<pre><code>docker run -dit -p 80:5000 -p 8080:21465 -v /etc/zabbix/scripts:/etc/zabbix/scripts 
+<pre><code>docker run -dit -p 80:5000 -p 8080:21465 -v /etc/zabbix/scripts:/etc/zabbix/scripts \
 --name sendgraph sansaoipb/notificacoes:full</code></pre>
 
 <b>OBS: </b><br>
@@ -259,7 +259,7 @@ se usar bot, este comando só servirá para finalizarmos a vinculação do remet
 Este comando, também trará a quantidade e as informações de todos os seus chats, como: Tipo, Nome, ID...<br>
 Mas somente para quem estiver <b>USANDO CONTA.</b> e não <b>BOT</b>
 
-<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts 
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts \
 --rm -it sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --infoAll</code></pre>
 
 <b>4 – </b> Ao executar o comando acima, será solicitado inserir o token do bot ou número de telefone da conta que será usada para envio, 
@@ -276,13 +276,13 @@ Para consultar a configuração de um usuário, grupo ou canal específico, exec
 
 <b>Script info ID, Nome ou user.</b><br>
 Exs: <br>
-<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts 
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts \
 --rm -it sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --info "-123456789"</code></pre>
 ou
-<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts 
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts \
 --rm -it sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --info "Nome Sobrenome"</code></pre>
 ou
-<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts 
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts \
 --rm -it sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --info "usuário"</code></pre><br>
 
 Pegue o “ID”, o “nome de cadastro” ou o "nome de registro" que aparecerá para executar o teste e posteriormente colocar no zabbix.
@@ -311,20 +311,20 @@ Para Email será: usuario@provedor.com.<br><br>
 Script para realização do teste e iniciar a configuração: <br>
 <b>Script, ID, Nome ou user.</b><br>
 Exs: <br>
-<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it 
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it \
 sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --send "-123456789"</code></pre>
 ou
-<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it 
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it \
 sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --send "Nome Sobrenome"</code></pre>
 ou
-<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it 
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it \
 sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --send "usuário"</code></pre>
 ou
-<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it 
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it \
 sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --send "URL_workflow"</code></pre><br>
 
 ou para realizar 4 envios simultaneamente, basta colocar as informações separados por vírgula, por Ex:
-<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it 
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it \
 sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --send "-123456789, 5522988776655, usuario@provedor.com, URL_workflow"</code></pre><br>
 
 <b>4 – </b> Para quem usa BOT, para pegar o ID (tanto do grupo/canal, como de tópico), basta copiar o link de alguma mensagem, como a estrutura abaixo.<br><br>
@@ -349,7 +349,7 @@ sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --send "-1
 </table>
 <br>
 <b>Ex Grupo/Canal: </b><br>
-<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it 
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it \
 sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --send "-1004100493856"</code></pre><br>
 
 
@@ -378,7 +378,7 @@ sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --send "-1
 </table>
 <br>
 <b>Ex Tópico: </b><br>
-<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it 
+<pre><code>docker run -v /etc/zabbix/scripts:/etc/zabbix/scripts --rm -it \
 sansaoipb/notificacoes:full /etc/zabbix/scripts/notificacoes-teste.py --send "-1004100493856_10562"</code></pre>
 
 # Configurando envio
