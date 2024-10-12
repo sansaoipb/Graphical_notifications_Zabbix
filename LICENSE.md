@@ -525,7 +525,7 @@ Vamos entender um pouco as funções configuráveis do arquivo de configuração
         open.source - Define se vc estará usando a API paga ou open source.
     </li>
     <li>
-        open.source.url - Se definir o campo acima como <b>yes</b>> e caso escolha outro nome de "sessão", precisará alterar na URL de SendGraph para o que escolheu: <b>http://127.0.0.1/api/nome_da_sessao_criada</b>
+        open.source.url - Se definir o campo acima como <b>yes</b> e caso escolha outro nome de "sessão", precisará alterar na URL de SendGraph para o que escolheu: <b>http://127.0.0.1/api/nome_da_sessao_criada</b>
     </li>
     <li>
         open.source.token - Se definir o campo acima como <b>yes</b>, precisará informar o token gerado.
