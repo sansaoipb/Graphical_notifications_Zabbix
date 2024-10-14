@@ -50,7 +50,7 @@ O "How to" foi testado no 7.0.
 	</li>
 	<li>
 		<strong>
-			<a href=#edite-os-parâmetros>parâmetros do script</a>
+			<a href=#edite-os-parâmetros>Parâmetros do script</a>
 		</strong>
 	</li>
 	<li>

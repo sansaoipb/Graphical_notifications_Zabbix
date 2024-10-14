@@ -65,7 +65,7 @@ O "How to" foi testado no ZABBIX 3.0 ao 7.0 no Debian 9 ao 11, Ubuntu 20 e 22 e 
 	</li>
 	<li>
 		<strong>
-			<a href=#edite-os-parâmetros>Parametros do script</a>
+			<a href=#edite-os-parâmetros>Parâmetros do script</a>
 		</strong>
 	</li>
 	<li>
