@@ -168,7 +168,7 @@ Tentei instalar em uma máquina com o zabbix, e não deu certo, logo, melhor ter
 
 Depois de aprovisionar VM, realize a instalação <b>OpenSource</b> no <b><u>Ubuntu 22.04</u></b>, realize a execução do comando abaixo.<br>
 
-<pre><code>curl -sSL https://raw.githubusercontent.com/marcilioramos/alert_wpp_zabbix/main/config_ambiente.sh | bash </code></pre>
+<pre><code>curl -sSL https://raw.githubusercontent.com/sansaoipb/scripts/refs/heads/master/whatsapp.sh | bash </code></pre>
 
 Depois de validar que o serviço está operacional, siga os próximos passos.<br>
 Caso o serviço não esteja OK, entre em contato no "grupo de ajuda" supracitado, para mais detalhes sobre a configuração, mas consulte o git do mantenedor e assista o video disponibilizado:<br>
