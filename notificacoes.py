@@ -641,7 +641,7 @@ def send_whatsapp_free(token_wa, itemType, graph, url_base, message, destiny, sa
 
     if saudacao:
         saudacao, _ = saudacao.split(".")
-        message = message.replace(saudacao, f"{saudacao}, {groupName}")
+        message = message.replace(saudacao, f"{saudacao}, {groupName}").replace(r"\u2705", r"✅")
 
     data = {
         "phone": destiny,
@@ -670,7 +670,7 @@ def send_whatsapp_free(token_wa, itemType, graph, url_base, message, destiny, sa
             r = json.loads(result.text)
             log.writelog('{}: {}'.format(r["status"], r['response']), arqLog, "INFO")
 
-        return texto
+        return [groupName, texto]
     except Exception as err:
         log.writelog('{0}'.format(str(err)), arqLog, "ERROR")
         exit()
@@ -733,7 +733,7 @@ def send_whatsapp(Ldestiny, itemType, get_graph, key):
     for destiny in Ldestiny:
         if re.search("(sim|s|yes|y)", str(wa_free).lower()):
             url_base = url_base_free
-            resultado = send_whatsapp_free(api_token, itemType, graph, url_base, message, destiny, saudacao)
+            destiny, resultado = send_whatsapp_free(api_token, itemType, graph, url_base, message, destiny, saudacao)
         else:
             url_base = f"http://api.meuaplicativo.vip:{port}/services"
             resultado = send_whatsapp_pay(itemType, graph, acessKey, url_base, message, line, destiny)
