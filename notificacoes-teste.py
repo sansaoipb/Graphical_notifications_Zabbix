@@ -894,8 +894,6 @@ def send_teams(webhook, itemType, get_graph):
         responseOk = 'Teams sent successfully | Teams enviado com sucesso ({0})'
         responsePro = 'Teams FAIL at sending message | FALHA ao enviar a mensagem pelo Teams\n{0}'
 
-    bodyMsg.append({"type": "TextBlock", "text": body, "wrap": True})
-
     payload = {
         "type": "message",
         'attachments': [{
