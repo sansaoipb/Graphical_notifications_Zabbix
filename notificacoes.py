@@ -79,6 +79,7 @@ else:
 zbx_server = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'url')
 zbx_user = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'user')
 zbx_pass = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection', 'pass')
+zbx_headers = {'Content-type': 'application/json'}
 
 # Graph settings | Configuracao do Grafico #############################################################################
 height = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSection',
@@ -824,7 +825,7 @@ def send_teams(Lwebhook, itemType, get_graph):
 
 
 def zbx_token(key):
-    global zbx_user, zbx_pass
+    global zbx_user, zbx_pass, zbx_version
     try:
         zbx_user = decrypt(key, zbx_user)
     except:
@@ -836,11 +837,13 @@ def zbx_token(key):
         zbx_pass = zbx_pass
 
     credentials = {"user": zbx_user, "password": zbx_pass}
-    if float(version_api()[:3]) >= 6.4:
+    zbx_version = float(version_api()[:3])
+
+    if zbx_version >= 6.4:
         credentials["username"] = credentials.pop("user")
 
     try:
-        login_api = requests.post(f'{zbx_server}/api_jsonrpc.php', headers={'Content-type': 'application/json'},
+        login_api = requests.post(f'{zbx_server}/api_jsonrpc.php', headers=zbx_headers,
                                   verify=False, data=json.dumps(
                 {
                     "jsonrpc": "2.0",
@@ -875,7 +878,7 @@ def zbx_token(key):
 
 
 def version_api():
-    resultado = requests.post(f'{zbx_server}/api_jsonrpc.php', headers={'Content-type': 'application/json'},
+    resultado = requests.post(f'{zbx_server}/api_jsonrpc.php', headers=zbx_headers,
                               verify=False, data=json.dumps(
             {
                 "jsonrpc": "2.0",
@@ -892,17 +895,19 @@ def version_api():
 
 
 def logout_api(auth_token):
-    requests.post(f'{zbx_server}/api_jsonrpc.php', headers={'Content-type': 'application/json'},
-                  verify=False, data=json.dumps(
-            {
-                "jsonrpc": "2.0",
-                "method": "user.logout",
-                "params": [],
-                "auth": auth_token,
-                "id": 4
-            }
-        )
-                  )
+    Json = {
+        "jsonrpc": "2.0",
+        "method": "user.logout",
+        "params": [],
+        "auth": auth_token,
+        "id": 4
+    }
+
+    if zbx_version > 7.0:
+        del Json["auth"]
+        zbx_headers["Authorization"] = f"Bearer {auth_token}"
+
+    requests.post(f'{zbx_server}/api_jsonrpc.php', headers=zbx_headers, verify=False, data=json.dumps(Json))
 
 
 def getgraph(triggerName, hostName, listaItemIds, period):
@@ -970,7 +975,7 @@ def getgraph(triggerName, hostName, listaItemIds, period):
 
         stime = time.strftime("%Y%m%d%H%M%S", time.localtime(time.time() - stime))
 
-        if 4.0 > float(version_api()[:3]):
+        if zbx_version < 4.0:
             period = "period={0}".format(period)
             nome_tempo = f"{{}}"
 
@@ -1027,25 +1032,28 @@ def getgraph(triggerName, hostName, listaItemIds, period):
         exit()
 
 
-def getTrigger(triggerid):
+def getTrigger(triggerId):
+    Json = {
+        "jsonrpc": "2.0",
+        "method": "trigger.get",
+        "params": {
+            "output": ["description"],
+            'triggerids': triggerId,
+            "selectItems": ['name', 'value_type', 'lastvalue'],
+            "selectHosts": ["name"],
+            "expandDescription": True,
+        },
+        "auth": auth,
+        "id": 2
+    }
+
+    if zbx_version > 7.0:
+        del Json["auth"]
+        zbx_headers["Authorization"] = f"Bearer {auth}"
+
     try:
-        triggerid = requests.post(f'{zbx_server}/api_jsonrpc.php', headers={'Content-type': 'application/json'},
-                                  verify=False, data=json.dumps(
-                {
-                    "jsonrpc": "2.0",
-                    "method": "trigger.get",
-                    "params": {
-                        "output": ["description"],
-                        'triggerids': triggerid,
-                        "selectItems": ['name', 'value_type', 'lastvalue'],
-                        "selectHosts": ["name"],
-                        "expandDescription": True,
-                    },
-                    "auth": auth,
-                    "id": 2
-                }
-            )
-                                  )
+        triggerid = requests.post(f'{zbx_server}/api_jsonrpc.php', headers=zbx_headers,
+                                  verify=False, data=json.dumps(Json))
 
         if triggerid.status_code != 200:
             log.writelog(f'HTTPError {triggerid.status_code}: {triggerid.reason}', arqLog, "WARNING")
@@ -1105,10 +1113,15 @@ def ack(dest, message):
         "auth": auth,
         "id": 3
     }
-    if 4.0 < float(version_api()[:3]):
+
+    if zbx_version > 4.0:
         Json["params"]["action"] = 6
 
-    requests.post(f'{zbx_server}/api_jsonrpc.php', headers={'Content-type': 'application/json'}, verify=False,
+    if zbx_version > 7.0:
+        del Json["auth"]
+        zbx_headers["Authorization"] = f"Bearer {auth}"
+
+    requests.post(f'{zbx_server}/api_jsonrpc.php', headers=zbx_headers, verify=False,
                   data=json.dumps(Json))
 
 
