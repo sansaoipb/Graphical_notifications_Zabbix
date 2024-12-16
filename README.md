@@ -153,7 +153,7 @@ sudo bash notificacoes.sh</code></pre>
 <blockquote> <p>Faça o download do script de instalação</p> </blockquote>
 
 <pre><code>cd /tmp
-wget https://raw.githubusercontent.com/sansaoipb/scripts/master/notificacoes.sh -O notificacoes.sh
+wget https://raw.githubusercontent.com/sansaoipb/scripts/master/notificacoes-beta.sh -O notificacoes.sh
 sudo dos2unix notificacoes.sh
 sudo bash notificacoes.sh</code></pre>
 
