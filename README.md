@@ -1,18 +1,20 @@
 # Doações
 <table>
     <tr>
-        <td> <!-- PagSeguro -->
+        <!--
+        <td> PagSeguro
             <h3>
                 <div align="center">PagSeguro</div>
             </h3>
             <a href="https://pag.ae/bljJm47">
             <img src="https://stc.pagseguro.uol.com.br/public/img/botoes/doacoes/120x53-doar.gif"></a>
         </td>
+        -->
         <td> <!-- PayPal -->
             <h3>
                 <div align="center">PayPal</div>
             </h3>
-            <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=7VVS675TLJHUL&lc=BR&item_name=Eracydes%20Lima%20Carvalho%20Junior&currency_code=BRL&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted">
+            <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=7VVS675TLJHUL&lc=BR&item_name=Sansão&currency_code=BRL&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted">
             <img src="https://www.paypalobjects.com/pt_BR/BR/i/btn/btn_donateCC_LG.gif"></a>
         </td>
         <td> <!-- PicPay -->
@@ -39,7 +41,7 @@
 # Graphical Notifications Zabbix
 Em caso de dúvida, sugestão ou dificuldade junte-se a nós no <b>Grupo do Telegram</b> <a href="https://t.me/+bTDzmSmMPHYzOTJh" class="wikilink2" title="Ingressar no Grupo" rel="nofollow">Gráfico no Email e Telegram</a>.
 
-O "How to" foi testado no ZABBIX 3.0 ao 7.0 no Debian 9 ao 11, Ubuntu 20 e 22 e CentOS/Oracle Linux/Rocky Linux/Redhat 8.0+, caso não utilize estas distros procure os pacotes descritos para sua necessidade.
+O "How to" foi testado no ZABBIX 3.0 ao 7.2 no Debian 9 ao 12, Ubuntu 20 e 22 e CentOS/Oracle Linux/Rocky Linux/Redhat 8.0+, caso não utilize estas distros procure os pacotes descritos para sua necessidade.
 
 <!--
 # Acompanhe no Vídeo:
