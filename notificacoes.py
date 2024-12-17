@@ -1018,9 +1018,9 @@ def getgraph(triggerName, hostName, listaItemIds, period):
 
             urlGraph += f"&items[{i}][itemid]={listaItemIds[i]}&items[{i}][drawtype]=5&items[{i}][color]={cor}"
 
-        get_graph = s.get(urlGraph)
+        get_graph = s.get(urlGraph, verify=False)
         sid = s.cookies.items()[0][1]
-        s.post(f'{zbx_server}/index.php?reconnect=1&sid={sid}')
+        s.post(f'{zbx_server}/index.php?reconnect=1&sid={sid}', verify=False)
 
         return get_graph
 
