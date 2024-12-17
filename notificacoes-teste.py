@@ -509,7 +509,7 @@ def send_mail(dest, itemType, get_graph):
         exit()
 
 
-def send_telegram(dest, itemType, get_graph, triggerid, valueProxy):
+def send_telegram(dest, itemType, get_graph, valueProxy):
     # Telegram settings | Configuracao do Telegram #####################################################################
     api_id0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTelegram', 'api.id')
     api_hash0 = PropertiesReaderX(path.format('configScripts.properties')).getValue('PathSectionTelegram', 'api.hash')
@@ -529,7 +529,6 @@ def send_telegram(dest, itemType, get_graph, triggerid, valueProxy):
 
     saudacao = salutation
     if saudacao:
-        # saudacao = salutation + " {0} \n\n"
         saudacao = salutation + " <b><u>{0}</u></b> \n\n"
     else:
         saudacao = ""
