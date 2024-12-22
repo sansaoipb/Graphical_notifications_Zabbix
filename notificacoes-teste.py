@@ -1704,7 +1704,7 @@ def main2(proxy, test=None):
                 emails.append(x)
 
             else:
-                send_telegram(x, item_type, get_graph, triggerid, proxy)
+                send_telegram(x, item_type, get_graph, proxy)
 
         if emails:
             send_mail(emails, item_type, get_graph)
